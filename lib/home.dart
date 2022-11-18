@@ -2,10 +2,11 @@ import 'dart:io';
 
 import 'package:file_manager/file_manager.dart';
 import 'package:flutter/material.dart';
-
+import 'package:player/play_screen.dart';
 
 class HomePage extends StatefulWidget {
   static const id = 'home_screen';
+
   const HomePage({super.key});
 
   @override
@@ -24,8 +25,6 @@ class _HomePageState extends State<HomePage> {
       getTitle();
     });
   }
-
-
 
   getTitle() async {
     setState(() {
@@ -99,6 +98,14 @@ class _HomePageState extends State<HomePage> {
                             // get date of file
                             // DateTime date = (await entity.stat()).modified;
                           } else {
+                            String ext = FileManager.getFileExtension(entity);
+                            if (ext == "mp3" || ext == "m4a") {
+                              Navigator.of(context)
+                                  .push(MaterialPageRoute(builder: (context) {
+                                return PlayScreen(path: entity.path);
+                              }));
+                            }
+
                             // delete a file
                             // await entity.delete();
 
