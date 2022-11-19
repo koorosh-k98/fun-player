@@ -1,7 +1,9 @@
 import 'dart:io';
 
+import 'package:bottom_sheet/bottom_sheet.dart';
 import 'package:file_manager/file_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:player/play_screen.dart';
 
 class HomePage extends StatefulWidget {
@@ -25,6 +27,15 @@ class _HomePageState extends State<HomePage> {
       getTitle();
     });
   }
+
+  final snackBar = SnackBar(
+    content: const Text('Unsupported file'),
+    action: SnackBarAction(
+        label: 'OK',
+        onPressed: () {
+          //to dismiss the Snackbar I deliberately left it empty
+        }),
+  );
 
   getTitle() async {
     setState(() {
@@ -69,41 +80,89 @@ class _HomePageState extends State<HomePage> {
             child: FileManager(
               controller: controller,
               builder: (context, snapshot) {
-                final List<FileSystemEntity> entities = snapshot;
+                List entities = [];
+                entities = snapshot
+                    .where((e) =>
+                        (FileManager.isDirectory(e) ||
+                            FileManager.getFileExtension(e) == "mp3") ||
+                        FileManager.getFileExtension(e) == "m4a")
+                    .toList();
                 return ListView.builder(
                   itemCount: entities.length,
                   itemBuilder: (context, index) {
                     FileSystemEntity entity = entities[index];
                     return Card(
                       child: ListTile(
-                        leading: FileManager.isFile(entity)
-                            ? const Icon(Icons.feed_outlined)
-                            : const Icon(Icons.folder),
-                        title: Text(FileManager.basename(entity)),
-                        subtitle: subtitle(entity),
-                        onTap: () async {
-                          if (FileManager.isDirectory(entity)) {
-                            // open the folder
-                            controller.openDirectory(entity);
+                          leading: (FileManager.isFile(entity)
+                              ? const Icon(Icons.music_note)
+                              : const Icon(Icons.folder)),
+                          title: Text(FileManager.basename(entity)),
+                          subtitle: subtitle(entity),
+                          onTap: () async {
+                            if (FileManager.isDirectory(entity)) {
+                              // open the folder
+                              controller.openDirectory(entity);
 
-                            // delete a folder
-                            // await entity.delete(recursive: true);
+                              // delete a folder
+                              // await entity.delete(recursive: true);
 
-                            // rename a folder
-                            // await entity.rename("newPath");
+                              // rename a folder
+                              // await entity.rename("newPath");
 
-                            // Check weather folder exists
-                            // entity.exists();
+                              // Check weather folder exists
+                              // entity.exists();
 
-                            // get date of file
-                            // DateTime date = (await entity.stat()).modified;
-                          } else {
-                            String ext = FileManager.getFileExtension(entity);
-                            if (ext == "mp3" || ext == "m4a") {
-                              Navigator.of(context)
-                                  .push(MaterialPageRoute(builder: (context) {
-                                return PlayScreen(path: entity.path);
-                              }));
+                              // get date of file
+                              // DateTime date = (await entity.stat()).modified;
+                            } else {
+                              // showFlexibleBottomSheet(
+                              //   // minHeight: 0.3,
+                              //   initHeight: 0.3,
+                              //   maxHeight: 1,
+                              //   isDismissible: true,
+                              //   isExpand: true,
+                              //   isCollapsible: true,
+                              //   isModal: true,
+                              //   context: context,
+                              //   builder: (
+                              //     BuildContext context,
+                              //     ScrollController scrollController,
+                              //     double bottomSheetOffset,
+                              //   ) {
+                              //     return Material(
+                              //       child: Container(
+                              //         child: ListView(
+                              //           controller: scrollController,
+                              //           children: [
+                              //             Text(FileManager.basename(entity)),
+                              //           ],
+                              //         ),
+                              //       ),
+                              //     );
+                              //     // return PlayScreen(entity: entity);
+                              //   },
+                              //   anchors: [0, 0.5, 1],
+                              //   isSafeArea: true,
+                              // );
+
+                              showMaterialModalBottomSheet(
+                                enableDrag: true,
+                                // bounce: true,
+                                isDismissible: false,
+                                // expand: true,
+                                context: context,
+                                builder: (context) => Container(
+                                  height: 200,
+                                  child: Text(
+                                    FileManager.basename(entity),
+                                    style: TextStyle(fontSize: 30),
+                                  ),
+                                ),
+                              );
+                              // Navigator.of(context)
+                              //     .push(MaterialPageRoute(builder: (context) {
+                              //   return PlayScreen(entity: entity);
+                              // }));
                             }
 
                             // delete a file
@@ -120,9 +179,7 @@ class _HomePageState extends State<HomePage> {
 
                             // get the size of the file
                             // int size = (await entity.stat()).size;
-                          }
-                        },
-                      ),
+                          }),
                     );
                   },
                 );
