@@ -1,24 +1,28 @@
 import 'dart:io';
 
-import 'package:bottom_sheet/bottom_sheet.dart';
 import 'package:file_manager/file_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:player/play_music.dart';
 import 'package:player/play_screen.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   static const id = 'home_screen';
 
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> {
   final FileManagerController controller = FileManagerController();
+  FileSystemEntity? _selectedEntity;
 
   Widget title = const Text("");
+
+  final playProvider = ChangeNotifierProvider((_) => PlayMusic());
 
   @override
   void initState() {
@@ -38,26 +42,28 @@ class _HomePageState extends State<HomePage> {
   );
 
   getTitle() async {
-    setState(() {
-      title = ValueListenableBuilder<String>(
-          valueListenable: controller.titleNotifier,
-          builder: (context, title, _) {
-            return Text(title);
-          });
-    });
+    title = ValueListenableBuilder<String>(
+        valueListenable: controller.titleNotifier,
+        builder: (context, title, _) {
+          return Text(title);
+        });
+  }
+
+  //to avoid going to the root directory
+  remainInCurrentPath() {
+    controller.setCurrentPath = controller.getCurrentPath;
   }
 
   @override
   Widget build(BuildContext context) {
+    double h = MediaQuery.of(context).size.height -
+        (_selectedEntity != null ? 205 : 100);
+    double w = MediaQuery.of(context).size.width * 0.30;
     return ControlBackButton(
       controller: controller,
       child: Scaffold(
           appBar: AppBar(
             actions: [
-              IconButton(
-                onPressed: () => createFolder(context),
-                icon: const Icon(Icons.create_new_folder_outlined),
-              ),
               IconButton(
                 onPressed: () => sort(context),
                 icon: const Icon(Icons.sort_rounded),
@@ -75,116 +81,150 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
-          body: Container(
-            margin: const EdgeInsets.all(10),
-            child: FileManager(
-              controller: controller,
-              builder: (context, snapshot) {
-                List entities = [];
-                entities = snapshot
-                    .where((e) =>
-                        (FileManager.isDirectory(e) ||
-                            FileManager.getFileExtension(e) == "mp3") ||
-                        FileManager.getFileExtension(e) == "m4a")
-                    .toList();
-                return ListView.builder(
-                  itemCount: entities.length,
-                  itemBuilder: (context, index) {
-                    FileSystemEntity entity = entities[index];
-                    return Card(
-                      child: ListTile(
-                          leading: (FileManager.isFile(entity)
-                              ? const Icon(Icons.music_note)
-                              : const Icon(Icons.folder)),
-                          title: Text(FileManager.basename(entity)),
-                          subtitle: subtitle(entity),
-                          onTap: () async {
-                            if (FileManager.isDirectory(entity)) {
-                              // open the folder
-                              controller.openDirectory(entity);
-
-                              // delete a folder
-                              // await entity.delete(recursive: true);
-
-                              // rename a folder
-                              // await entity.rename("newPath");
-
-                              // Check weather folder exists
-                              // entity.exists();
-
-                              // get date of file
-                              // DateTime date = (await entity.stat()).modified;
-                            } else {
-                              // showFlexibleBottomSheet(
-                              //   // minHeight: 0.3,
-                              //   initHeight: 0.3,
-                              //   maxHeight: 1,
-                              //   isDismissible: true,
-                              //   isExpand: true,
-                              //   isCollapsible: true,
-                              //   isModal: true,
-                              //   context: context,
-                              //   builder: (
-                              //     BuildContext context,
-                              //     ScrollController scrollController,
-                              //     double bottomSheetOffset,
-                              //   ) {
-                              //     return Material(
-                              //       child: Container(
-                              //         child: ListView(
-                              //           controller: scrollController,
-                              //           children: [
-                              //             Text(FileManager.basename(entity)),
-                              //           ],
-                              //         ),
-                              //       ),
-                              //     );
-                              //     // return PlayScreen(entity: entity);
-                              //   },
-                              //   anchors: [0, 0.5, 1],
-                              //   isSafeArea: true,
-                              // );
-
-                              showMaterialModalBottomSheet(
-                                enableDrag: true,
-                                // bounce: true,
-                                isDismissible: false,
-                                // expand: true,
-                                context: context,
-                                builder: (context) => Container(
-                                  height: 200,
-                                  child: Text(
-                                    FileManager.basename(entity),
-                                    style: TextStyle(fontSize: 30),
-                                  ),
-                                ),
-                              );
-                              // Navigator.of(context)
-                              //     .push(MaterialPageRoute(builder: (context) {
-                              //   return PlayScreen(entity: entity);
-                              // }));
-                            }
-
-                            // delete a file
-                            // await entity.delete();
-
-                            // rename a file
-                            // await entity.rename("newPath");
-
-                            // Check weather file exists
-                            // entity.exists();
-
-                            // get date of file
-                            // DateTime date = (await entity.stat()).modified;
-
-                            // get the size of the file
-                            // int size = (await entity.stat()).size;
-                          }),
+          body: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                height: h,
+                margin: const EdgeInsets.all(10),
+                child: FileManager(
+                  controller: controller,
+                  builder: (context, snapshot) {
+                    List entities = [];
+                    entities = snapshot
+                        .where((e) =>
+                            (FileManager.isDirectory(e) ||
+                                FileManager.getFileExtension(e) == "mp3") ||
+                            FileManager.getFileExtension(e) == "m4a")
+                        .toList();
+                    return ListView.builder(
+                      itemCount: entities.length,
+                      itemBuilder: (context, index) {
+                        FileSystemEntity entity = entities[index];
+                        return Card(
+                          child: ListTile(
+                              leading: (FileManager.isFile(entity)
+                                  ? const Icon(Icons.music_note)
+                                  : const Icon(Icons.folder)),
+                              title: Text(FileManager.basename(entity)),
+                              subtitle: subtitle(entity),
+                              onTap: () {
+                                if (FileManager.isDirectory(entity)) {
+                                  controller.openDirectory(entity);
+                                } else {
+                                  _selectedEntity = entity;
+                                  showMaterialModalBottomSheet(
+                                      enableDrag: true,
+                                      // bounce: true,
+                                      isDismissible: false,
+                                      // expand: true,
+                                      context: context,
+                                      builder: (context) {
+                                        _selectedEntity = entity;
+                                        remainInCurrentPath();
+                                        ref.read(playProvider).play();
+                                        return PlayScreen(entity: entity);
+                                      });
+                                }
+                              }),
+                        );
+                      },
                     );
                   },
-                );
-              },
-            ),
+                ),
+              ),
+              if (_selectedEntity != null)
+                GestureDetector(
+                  onTap: () {
+                    showMaterialModalBottomSheet(
+                        enableDrag: true,
+                        // bounce: true,
+                        isDismissible: false,
+                        // expand: true,
+                        context: context,
+                        builder: (context) =>
+                            PlayScreen(entity: _selectedEntity));
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(5, 0, 5, 5),
+                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                    decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.green),
+                    height: 100,
+                    width: double.infinity,
+                    child: Row(
+                      children: [
+                        Container(
+                          decoration: const BoxDecoration(
+                              shape: BoxShape.circle, color: Colors.blue),
+                          width: 60,
+                          height: 60,
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        SizedBox(
+                          width: w,
+                          child: Text(
+                            FileManager.basename(_selectedEntity),
+                            style: const TextStyle(
+                                fontSize: 18, color: Colors.white),
+                            softWrap: true,
+                            overflow:
+                                FileManager.basename(_selectedEntity).length >
+                                        35
+                                    ? TextOverflow.ellipsis
+                                    : TextOverflow.clip,
+                          ),
+                        ),
+                        const Spacer(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            IconButton(
+                                onPressed: () {},
+                                icon: const Icon(
+                                  Icons.fast_rewind,
+                                  size: 50,
+                                  color: Colors.white70,
+                                )),
+                            IconButton(
+                                onPressed: () {
+                                  final myProvider = ref.read(playProvider);
+
+                                  if (myProvider.isPlaying) {
+                                    myProvider.pause();
+                                  } else {
+                                    myProvider.play();
+                                  }
+                                },
+                                icon: Icon(
+                                  ref.watch(playProvider).isPlaying
+                                      ? Icons.pause
+                                      : Icons.play_arrow,
+                                  size: 50,
+                                  color: Colors.white70,
+                                )),
+                            IconButton(
+                                onPressed: () {},
+                                icon: const Icon(
+                                  Icons.fast_forward_sharp,
+                                  size: 50,
+                                  color: Colors.white70,
+                                )),
+                            const SizedBox(
+                              width: 15,
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                )
+            ],
           )),
     );
   }
@@ -283,47 +323,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-    );
-  }
-
-  createFolder(BuildContext context) async {
-    showDialog(
-      context: context,
-      builder: (context) {
-        TextEditingController folderName = TextEditingController();
-        return Dialog(
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  title: TextField(
-                    controller: folderName,
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      // Create Folder
-                      await FileManager.createFolder(
-                          controller.getCurrentPath, folderName.text);
-                      // Open Created Folder
-                      controller.setCurrentPath =
-                          "${controller.getCurrentPath}/${folderName.text}";
-                    } catch (e) {
-                      print("Catched error");
-                    }
-
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Create Folder'),
-                )
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

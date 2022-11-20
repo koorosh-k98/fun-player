@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:player/home.dart';
 import 'package:player/permission.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(MyApp(
+  runApp(ProviderScope(child:MyApp(
       initialRoute: await Permission.storage.isGranted
           ? HomePage.id
-          : PermissionHandle.id));
+          : PermissionHandle.id)));
 }
 
 class MyApp extends StatelessWidget {
