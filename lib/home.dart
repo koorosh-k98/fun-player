@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:file_manager/file_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:id3/id3.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:player/play_music_provider.dart';
 import 'package:player/play_screen.dart';
 import 'package:player/title_provider.dart';
+// import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 
 import 'entity_provider.dart';
 
@@ -45,11 +47,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       title = controller.getCurrentPath.split("/").last;
     }
     ref.read(titleProvider).setTitle = title;
-    // title = ValueListenableBuilder<String>(
-    //     valueListenable: controller.titleNotifier,
-    //     builder: (context, title, _) {
-    //       return Text(title);
-    //     });
   }
 
   final snackBar = SnackBar(
@@ -121,26 +118,33 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 leading: (FileManager.isFile(entity)
                                     ? const SizedBox(
                                         height: 50,
-                                        child: Icon(Icons.music_note))
+                                        child: Icon(
+                                          Icons.music_note,
+                                          color: Colors.blue,
+                                        ))
                                     : const SizedBox(
-                                        height: 50, child: Icon(Icons.folder))),
+                                        height: 50,
+                                        child: Icon(
+                                          Icons.folder,
+                                          color: Colors.amber,
+                                        ))),
                                 title: Text(FileManager.basename(entity)),
                                 subtitle: subtitle(entity),
-                                onTap: () {
+                                onTap: () async {
                                   if (FileManager.isDirectory(entity)) {
                                     controller.openDirectory(entity);
                                     getTitle();
                                   } else {
                                     ref.read(entityProvider).setEntity(entity);
                                     ref.read(playProvider).play(entity: entity);
-
-                                    showMaterialModalBottomSheet(
-                                        enableDrag: true,
-                                        isDismissible: false,
-                                        context: context,
-                                        builder: (context) {
-                                          return PlayScreen();
-                                        });
+                                    getMetadata(entity.path);
+                                    // showMaterialModalBottomSheet(
+                                    //     enableDrag: true,
+                                    //     isDismissible: false,
+                                    //     context: context,
+                                    //     builder: (context) {
+                                    //       return PlayScreen();
+                                    //     });
                                   }
                                 }),
                           );
@@ -349,4 +353,38 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
     );
   }
+
+
+    // Future<Map<String, dynamic>>
+    getMetadata(path) async {
+
+      List<int> mp3Bytes = File(path).readAsBytesSync();
+      MP3Instance mp3instance = MP3Instance(mp3Bytes);
+      if(mp3instance.parseTagsSync()){
+        print("\n\n\n");
+        print("metaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: "+mp3instance.getMetaTags().toString());
+        print("\n\n\n");
+      }
+      // final metadata = await MetadataRetriever.fromFile(File(path));
+
+      // metadata.trackName;
+      // metadata.trackArtistNames;
+      // metadata.albumName;
+      // metadata.albumArtistName;
+      // metadata.trackNumber;
+      // metadata.albumLength;
+      // metadata.year;
+      // metadata.genre;
+      // metadata.authorName;
+      // metadata.writerName;
+      // metadata.discNumber;
+      // metadata.mimeType;
+      // metadata.trackDuration;
+      // metadata.bitrate;
+      // /* Accessing album art as Uint8List. Use [Image.memory] to show it inside the app. */
+      // metadata.albumArt;
+      // print(metadata.writerName);
+      // return metadata.toJson();
+    }
+
 }
