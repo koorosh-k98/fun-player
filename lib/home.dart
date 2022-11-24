@@ -3,13 +3,10 @@ import 'dart:io';
 import 'package:file_manager/file_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:id3/id3.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:player/play_music_provider.dart';
 import 'package:player/play_screen.dart';
 import 'package:player/title_provider.dart';
-// import 'package:flutter_media_metadata/flutter_media_metadata.dart';
-
 import 'entity_provider.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -137,7 +134,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   } else {
                                     ref.read(entityProvider).setEntity(entity);
                                     ref.read(playProvider).play(entity: entity);
-                                    getMetadata(entity.path);
+                                    ref
+                                        .read(playProvider)
+                                        .getMetadata(entity);
                                     // showMaterialModalBottomSheet(
                                     //     enableDrag: true,
                                     //     isDismissible: false,
@@ -162,7 +161,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                           enableDrag: true,
                           isDismissible: false,
                           context: context,
-                          builder: (context) => PlayScreen());
+                          builder: (context) => PlayScreen(
+                              entity: ref.read(entityProvider).entity));
                     },
                     child: Container(
                       margin: const EdgeInsets.fromLTRB(5, 0, 5, 5),
@@ -170,7 +170,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       decoration: BoxDecoration(
                           shape: BoxShape.rectangle,
                           borderRadius: BorderRadius.circular(20),
-                          color: Colors.green),
+                          color: Colors.black54),
                       height: 100,
                       width: double.infinity,
                       child: Row(
@@ -180,6 +180,23 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 shape: BoxShape.circle, color: Colors.blue),
                             width: 60,
                             height: 60,
+                            child: Consumer(builder: (context, ref, _) {
+                              return ref.watch(playProvider).artwork == null
+                                  ? Center(
+                                      child: Text(
+                                        FileManager.basename(
+                                                ref.read(entityProvider).entity)
+                                            .substring(0, 1),
+                                        style: const TextStyle(
+                                            color: Colors.white, fontSize: 33),
+                                      ),
+                                    )
+                                  : ClipRRect(
+                                      borderRadius: BorderRadius.circular(30),
+                                      child: Image.memory(
+                                          ref.read(playProvider).artwork!),
+                                    );
+                            }),
                           ),
                           const SizedBox(
                             width: 10,
@@ -353,38 +370,4 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
     );
   }
-
-
-    // Future<Map<String, dynamic>>
-    getMetadata(path) async {
-
-      List<int> mp3Bytes = File(path).readAsBytesSync();
-      MP3Instance mp3instance = MP3Instance(mp3Bytes);
-      if(mp3instance.parseTagsSync()){
-        print("\n\n\n");
-        print("metaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: "+mp3instance.getMetaTags().toString());
-        print("\n\n\n");
-      }
-      // final metadata = await MetadataRetriever.fromFile(File(path));
-
-      // metadata.trackName;
-      // metadata.trackArtistNames;
-      // metadata.albumName;
-      // metadata.albumArtistName;
-      // metadata.trackNumber;
-      // metadata.albumLength;
-      // metadata.year;
-      // metadata.genre;
-      // metadata.authorName;
-      // metadata.writerName;
-      // metadata.discNumber;
-      // metadata.mimeType;
-      // metadata.trackDuration;
-      // metadata.bitrate;
-      // /* Accessing album art as Uint8List. Use [Image.memory] to show it inside the app. */
-      // metadata.albumArt;
-      // print(metadata.writerName);
-      // return metadata.toJson();
-    }
-
 }
