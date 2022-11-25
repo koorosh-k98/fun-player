@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_manager/file_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:marquee/marquee.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:player/play_music_provider.dart';
 import 'package:player/play_screen.dart';
@@ -22,6 +23,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   final FileManagerController controller = FileManagerController();
 
   Widget title = const Text("");
+  List entities = [];
 
   final playProvider = ChangeNotifierProvider((_) => PlayMusicProvider());
   final entityProvider = ChangeNotifierProvider((_) => EntityProvider());
@@ -57,9 +59,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // double h = MediaQuery.of(context).size.height -
-    //     (ref.read(entityProvider).entity != null ? 205 : 100);
-    double w = MediaQuery.of(context).size.width * 0.30;
+    double w = MediaQuery.of(context).size.width * 0.35;
     return ControlBackButton(
       controller: controller,
       child: Scaffold(
@@ -94,12 +94,11 @@ class _HomePageState extends ConsumerState<HomePage> {
             children: [
               Expanded(
                 child: Container(
-                  // height: h,
                   margin: const EdgeInsets.all(10),
                   child: FileManager(
                     controller: controller,
                     builder: (context, snapshot) {
-                      List entities = [];
+                      entities = [];
                       entities = snapshot
                           .where((e) =>
                               (FileManager.isDirectory(e) ||
@@ -134,16 +133,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   } else {
                                     ref.read(entityProvider).setEntity(entity);
                                     ref.read(playProvider).play(entity: entity);
-                                    ref
-                                        .read(playProvider)
-                                        .getMetadata(entity);
-                                    // showMaterialModalBottomSheet(
-                                    //     enableDrag: true,
-                                    //     isDismissible: false,
-                                    //     context: context,
-                                    //     builder: (context) {
-                                    //       return PlayScreen();
-                                    //     });
+                                    ref.read(playProvider).getMetadata(entity);
                                   }
                                 }),
                           );
@@ -178,8 +168,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                           Container(
                             decoration: const BoxDecoration(
                                 shape: BoxShape.circle, color: Colors.blue),
-                            width: 60,
-                            height: 60,
+                            width: 65,
+                            height: 65,
                             child: Consumer(builder: (context, ref, _) {
                               return ref.watch(playProvider).artwork == null
                                   ? Center(
@@ -201,23 +191,46 @@ class _HomePageState extends ConsumerState<HomePage> {
                           const SizedBox(
                             width: 10,
                           ),
-                          SizedBox(
-                            width: w,
-                            child: Text(
-                              FileManager.basename(
-                                  ref.read(entityProvider).entity),
-                              style: const TextStyle(
-                                  fontSize: 18, color: Colors.white),
-                              softWrap: true,
-                              overflow: FileManager.basename(
-                                              ref.read(entityProvider).entity)
-                                          .length >
-                                      35
-                                  ? TextOverflow.ellipsis
-                                  : TextOverflow.clip,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  height: 35,
+                                  width: w,
+                                  child: Marquee(
+                                    text: FileManager.basename(
+                                        ref.read(entityProvider).entity),
+                                    style: const TextStyle(
+                                        fontSize: 18, color: Colors.white),
+                                    velocity: 30,
+                                    blankSpace: w,
+                                    fadingEdgeStartFraction: 0.2,
+                                    fadingEdgeEndFraction: 0.2,
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 35,
+                                  width: w,
+                                  child: Consumer(builder: (context, ref, _) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8),
+                                      child: Text(
+                                        ref.watch(playProvider).tag?.artist ??
+                                            "Unknown artist",
+                                        style: const TextStyle(
+                                            fontSize: 15, color: Colors.white),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ],
                             ),
                           ),
-                          const Spacer(),
+                          // const Spacer(),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
