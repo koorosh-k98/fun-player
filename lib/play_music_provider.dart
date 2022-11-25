@@ -6,8 +6,14 @@ import 'package:audiotagger/audiotagger.dart';
 import 'package:audiotagger/models/tag.dart';
 import 'package:file_manager/file_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'entity_provider.dart';
 
 class PlayMusicProvider extends ChangeNotifier {
+
+
+
   bool _isPlaying = false;
 
   bool get isPlaying => _isPlaying;
@@ -23,6 +29,14 @@ class PlayMusicProvider extends ChangeNotifier {
   Tag? get tag => _tag;
 
   Uint8List? get artwork => _artwork;
+
+  List _entities = [];
+
+  List get playlist => _entities;
+
+  int _pIndex = 0;
+
+  int get pIndex => _pIndex;
 
   play({required FileSystemEntity? entity}) {
     if (classEntity == entity) {
@@ -42,14 +56,6 @@ class PlayMusicProvider extends ChangeNotifier {
   }
 
   getMetadata(entity) async {
-    // List<int> mp3Bytes = File(path).readAsBytesSync();
-    // MP3Instance mp3instance = MP3Instance(mp3Bytes);
-    // if (mp3instance.parseTagsSync()) {
-    //   print("\n\n\n");
-    //   print("metaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: " +
-    //       mp3instance.getMetaTags().toString());
-    //   print("\n\n\n");
-    // }
     _artwork = null;
 
     if (FileManager.getFileExtension(entity) == "mp3") {
@@ -76,6 +82,19 @@ class PlayMusicProvider extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  getArtworks(List entities) {}
+
+  setPlaylist(List entities) {
+    _entities = entities;
+    notifyListeners();
+  }
+
+  setPIndex(int index) {
+    _pIndex = index;
+    notifyListeners();
+  }
+
 
   @override
   void dispose() {

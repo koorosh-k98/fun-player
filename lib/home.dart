@@ -23,7 +23,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   final FileManagerController controller = FileManagerController();
 
   Widget title = const Text("");
-  List entities = [];
+  List playlist = [];
+  int pIndex = 0;
 
   final playProvider = ChangeNotifierProvider((_) => PlayMusicProvider());
   final entityProvider = ChangeNotifierProvider((_) => EntityProvider());
@@ -94,11 +95,11 @@ class _HomePageState extends ConsumerState<HomePage> {
             children: [
               Expanded(
                 child: Container(
-                  margin: const EdgeInsets.all(10),
+                  margin: const EdgeInsets.all(5),
                   child: FileManager(
                     controller: controller,
                     builder: (context, snapshot) {
-                      entities = [];
+                      List entities = [];
                       entities = snapshot
                           .where((e) =>
                               (FileManager.isDirectory(e) ||
@@ -112,12 +113,39 @@ class _HomePageState extends ConsumerState<HomePage> {
                           return Card(
                             child: ListTile(
                                 leading: (FileManager.isFile(entity)
-                                    ? const SizedBox(
-                                        height: 50,
-                                        child: Icon(
-                                          Icons.music_note,
-                                          color: Colors.blue,
-                                        ))
+                                    ? Container(
+                                        decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.blue),
+                                        width: 55,
+                                        height: 55,
+                                        child: Consumer(
+                                            builder: (context, ref, _) {
+                                          return ref
+                                                      .watch(playProvider)
+                                                      .artwork ==
+                                                  null
+                                              ? Center(
+                                                  child: Text(
+                                                    FileManager.basename(ref
+                                                            .read(
+                                                                entityProvider)
+                                                            .entity)
+                                                        .substring(0, 1),
+                                                    style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 33),
+                                                  ),
+                                                )
+                                              : ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(30),
+                                                  child: Image.memory(ref
+                                                      .read(playProvider)
+                                                      .artwork!),
+                                                );
+                                        }),
+                                      )
                                     : const SizedBox(
                                         height: 50,
                                         child: Icon(
@@ -131,9 +159,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     controller.openDirectory(entity);
                                     getTitle();
                                   } else {
-                                    ref.read(entityProvider).setEntity(entity);
-                                    ref.read(playProvider).play(entity: entity);
-                                    ref.read(playProvider).getMetadata(entity);
+                                    myPlay(index, entity, entities);
                                   }
                                 }),
                           );
@@ -161,15 +187,15 @@ class _HomePageState extends ConsumerState<HomePage> {
                           shape: BoxShape.rectangle,
                           borderRadius: BorderRadius.circular(20),
                           color: Colors.black54),
-                      height: 100,
+                      height: 90,
                       width: double.infinity,
                       child: Row(
                         children: [
                           Container(
                             decoration: const BoxDecoration(
                                 shape: BoxShape.circle, color: Colors.blue),
-                            width: 65,
-                            height: 65,
+                            width: 62,
+                            height: 62,
                             child: Consumer(builder: (context, ref, _) {
                               return ref.watch(playProvider).artwork == null
                                   ? Center(
@@ -192,7 +218,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             width: 10,
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10.0),
+                            padding: const EdgeInsets.symmetric(vertical: 15.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -211,35 +237,31 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   ),
                                 ),
                                 SizedBox(
-                                  height: 35,
+                                  height: 25,
                                   width: w,
                                   child: Consumer(builder: (context, ref, _) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8),
-                                      child: Text(
-                                        ref.watch(playProvider).tag?.artist ??
-                                            "Unknown artist",
-                                        style: const TextStyle(
-                                            fontSize: 15, color: Colors.white),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                                    return Text(
+                                      ref.watch(playProvider).tag?.artist ??
+                                          "Unknown artist",
+                                      style: const TextStyle(
+                                          fontSize: 15, color: Colors.white),
+                                      overflow: TextOverflow.ellipsis,
                                     );
                                   }),
                                 ),
                               ],
                             ),
                           ),
-                          // const Spacer(),
+                          const Spacer(),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               IconButton(
-                                  onPressed: () {},
+                                  onPressed: rewind,
                                   icon: const Icon(
                                     Icons.fast_rewind,
-                                    size: 50,
+                                    size: 30,
                                     color: Colors.white,
                                   )),
                               IconButton(
@@ -258,14 +280,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     ref.watch(playProvider).isPlaying
                                         ? Icons.pause
                                         : Icons.play_arrow,
-                                    size: 50,
+                                    size: 35,
                                     color: Colors.white,
                                   )),
                               IconButton(
-                                  onPressed: () {},
+                                  onPressed: forward,
                                   icon: const Icon(
                                     Icons.fast_forward_sharp,
-                                    size: 50,
+                                    size: 30,
                                     color: Colors.white,
                                   )),
                               const SizedBox(
@@ -284,6 +306,32 @@ class _HomePageState extends ConsumerState<HomePage> {
             ],
           )),
     );
+  }
+
+  forward() {
+    List playlist = ref.read(playProvider).playlist;
+    int index = ref.read(playProvider).pIndex;
+    if (index < playlist.length - 1) {
+      index++;
+    }
+    myPlay(index, playlist[index], playlist);
+  }
+
+  rewind() {
+    List playlist = ref.read(playProvider).playlist;
+    int index = ref.read(playProvider).pIndex;
+    if (index > 0) {
+      index--;
+    }
+    myPlay(index, playlist[index], playlist);
+  }
+
+  void myPlay(int index, FileSystemEntity entity, List entities) {
+    ref.read(entityProvider).setEntity(entity);
+    ref.read(playProvider).play(entity: entity);
+    ref.read(playProvider).getMetadata(entity);
+    ref.read(playProvider).setPlaylist(entities);
+    ref.read(playProvider).setPIndex(index);
   }
 
   Widget subtitle(FileSystemEntity entity) {
