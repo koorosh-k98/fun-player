@@ -25,6 +25,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget title = const Text("");
   List playlist = [];
   int pIndex = 0;
+  List entities = [];
 
   final playProvider = ChangeNotifierProvider((_) => PlayMusicProvider());
   final entityProvider = ChangeNotifierProvider((_) => EntityProvider());
@@ -99,13 +100,18 @@ class _HomePageState extends ConsumerState<HomePage> {
                   child: FileManager(
                     controller: controller,
                     builder: (context, snapshot) {
-                      List entities = [];
+                      entities = [];
                       entities = snapshot
                           .where((e) =>
                               (FileManager.isDirectory(e) ||
                                   FileManager.getFileExtension(e) == "mp3") ||
                               FileManager.getFileExtension(e) == "m4a")
                           .toList();
+
+                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                        ref.read(playProvider).setLength(entities.length);
+                        ref.read(playProvider).retrieveArtworks(entities);
+                      });
                       return ListView.builder(
                         itemCount: entities.length,
                         itemBuilder: (context, index) {
@@ -121,29 +127,35 @@ class _HomePageState extends ConsumerState<HomePage> {
                                         height: 55,
                                         child: Consumer(
                                             builder: (context, ref, _) {
-                                          return ref
-                                                      .watch(playProvider)
-                                                      .artwork ==
-                                                  null
-                                              ? Center(
-                                                  child: Text(
-                                                    FileManager.basename(ref
-                                                            .read(
-                                                                entityProvider)
-                                                            .entity)
-                                                        .substring(0, 1),
-                                                    style: const TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 33),
-                                                  ),
-                                                )
-                                              : ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(30),
-                                                  child: Image.memory(ref
-                                                      .read(playProvider)
-                                                      .artwork!),
-                                                );
+                                          if (ref
+                                              .watch(playProvider)
+                                              .artworks
+                                              .isNotEmpty) {
+                                            return (ref
+                                                        .watch(playProvider)
+                                                        .artworks[index] ==
+                                                    null)
+                                                ? Center(
+                                                    child: Text(
+                                                      FileManager.basename(
+                                                              entity)
+                                                          .substring(0, 1),
+                                                      style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 33),
+                                                    ),
+                                                  )
+                                                : ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            30),
+                                                    child: Image.memory(ref
+                                                        .watch(playProvider)
+                                                        .artworks[index]),
+                                                  );
+                                          } else {
+                                            return Container();
+                                          }
                                         }),
                                       )
                                     : const SizedBox(

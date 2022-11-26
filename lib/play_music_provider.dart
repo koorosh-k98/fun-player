@@ -11,9 +11,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'entity_provider.dart';
 
 class PlayMusicProvider extends ChangeNotifier {
-
-
-
   bool _isPlaying = false;
 
   bool get isPlaying => _isPlaying;
@@ -24,15 +21,23 @@ class PlayMusicProvider extends ChangeNotifier {
 
   Uint8List? _artwork;
 
+  List _artworks = [];
+
+  int _length = 0;
+
   Tag? _tag;
 
   Tag? get tag => _tag;
 
   Uint8List? get artwork => _artwork;
 
-  List _entities = [];
+  List get artworks => _artworks;
 
-  List get playlist => _entities;
+  int get length => _length;
+
+  List _playList = [];
+
+  List get playlist => _playList;
 
   int _pIndex = 0;
 
@@ -83,10 +88,23 @@ class PlayMusicProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  getArtworks(List entities) {}
+  retrieveArtworks(List entities) async {
+    _artworks = List.generate(length, (index) => null);
+    final tagger = Audiotagger();
+    for (var e in entities) {
+      //the problem is "entities" which want to iterate all the element
+      // even if they are not present anymore.
+      if (FileManager.isFile(e) && FileManager.getFileExtension(e) == "mp3") {
+        var artwork = await tagger.readArtwork(path: e.path);
+        _artworks.add(artwork);
+        _artworks.insert(entities.indexOf(e), artwork);
+        notifyListeners();
+      }
+    }
+  }
 
   setPlaylist(List entities) {
-    _entities = entities;
+    _playList = entities;
     notifyListeners();
   }
 
@@ -95,6 +113,10 @@ class PlayMusicProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  setLength(int length) {
+    _length = length;
+    notifyListeners();
+  }
 
   @override
   void dispose() {
