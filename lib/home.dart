@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:audiotagger/audiotagger.dart';
 import 'package:file_manager/file_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,6 +31,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   final playProvider = ChangeNotifierProvider((_) => PlayMusicProvider());
   final entityProvider = ChangeNotifierProvider((_) => EntityProvider());
   final titleProvider = ChangeNotifierProvider((_) => TitleProvider());
+  final tagger = Audiotagger();
 
   @override
   void initState() {
@@ -108,10 +110,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                               FileManager.getFileExtension(e) == "m4a")
                           .toList();
 
-                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                        ref.read(playProvider).setLength(entities.length);
-                        ref.read(playProvider).retrieveArtworks(entities);
-                      });
+                      // WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                      // ref.read(playProvider).setLength(entities.length);
+                      // ref.read(playProvider).retrieveArtworks(entities);
+                      // });
                       return ListView.builder(
                         itemCount: entities.length,
                         itemBuilder: (context, index) {
@@ -125,39 +127,67 @@ class _HomePageState extends ConsumerState<HomePage> {
                                             color: Colors.blue),
                                         width: 55,
                                         height: 55,
-                                        child: Consumer(
-                                            builder: (context, ref, _) {
-                                          if (ref
-                                              .watch(playProvider)
-                                              .artworks
-                                              .isNotEmpty) {
-                                            return (ref
-                                                        .watch(playProvider)
-                                                        .artworks[index] ==
-                                                    null)
-                                                ? Center(
-                                                    child: Text(
-                                                      FileManager.basename(
-                                                              entity)
-                                                          .substring(0, 1),
-                                                      style: const TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 33),
-                                                    ),
-                                                  )
-                                                : ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            30),
-                                                    child: Image.memory(ref
-                                                        .watch(playProvider)
-                                                        .artworks[index]),
-                                                  );
-                                          } else {
+                                        child: FutureBuilder(
+                                          future: tagger.readArtwork(
+                                              path: entity.path),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.hasData) {
+                                              return ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(30),
+                                                child: Image.memory(
+                                                    snapshot.data!),
+                                              );
+                                            } else if (snapshot.hasError) {
+                                              print(
+                                                  "errorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr${snapshot.error}");
+                                            } else {
+                                              return Center(
+                                                child: Text(
+                                                  FileManager.basename(entity)
+                                                      .substring(0, 1),
+                                                  style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 33),
+                                                ),
+                                              );
+                                            }
                                             return Container();
-                                          }
-                                        }),
-                                      )
+                                          },
+                                        )
+                                        // Consumer(
+                                        //     builder: (context, ref, _) {
+                                        //   if (ref
+                                        //       .watch(playProvider)
+                                        //       .artworks
+                                        //       .isNotEmpty) {
+                                        //     return (ref
+                                        //                 .watch(playProvider)
+                                        //                 .artworks[index] ==
+                                        //             null)
+                                        //         ? Center(
+                                        //             child: Text(
+                                        //               FileManager.basename(
+                                        //                       entity)
+                                        //                   .substring(0, 1),
+                                        //               style: const TextStyle(
+                                        //                   color: Colors.white,
+                                        //                   fontSize: 33),
+                                        //             ),
+                                        //           )
+                                        //         : ClipRRect(
+                                        //             borderRadius:
+                                        //                 BorderRadius.circular(
+                                        //                     30),
+                                        //             child: Image.memory(ref
+                                        //                 .watch(playProvider)
+                                        //                 .artworks[index]),
+                                        //           );
+                                        //   } else {
+                                        //     return Container();
+                                        //   }
+                                        // }),
+                                        )
                                     : const SizedBox(
                                         height: 50,
                                         child: Icon(
@@ -186,11 +216,15 @@ class _HomePageState extends ConsumerState<HomePage> {
                   return GestureDetector(
                     onTap: () {
                       showMaterialModalBottomSheet(
-                          enableDrag: true,
-                          isDismissible: false,
-                          context: context,
-                          builder: (context) => PlayScreen(
-                              entity: ref.read(entityProvider).entity));
+                        enableDrag: true,
+                        isDismissible: false,
+                        context: context,
+                        builder: (context) => PlayScreen(
+                          entity: ref.read(entityProvider).entity,
+                          artwork: ref.read(playProvider).artwork,
+                          tag: ref.read(playProvider).tag,
+                        ),
+                      );
                     },
                     child: Container(
                       margin: const EdgeInsets.fromLTRB(5, 0, 5, 5),
@@ -339,11 +373,14 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void myPlay(int index, FileSystemEntity entity, List entities) {
-    ref.read(entityProvider).setEntity(entity);
+    FileSystemEntity? currentEntity = ref.read(entityProvider).entity;
+    if (currentEntity != entity) {
+      ref.read(entityProvider).setEntity(entity);
+      ref.read(playProvider).getMetadata(entity);
+      ref.read(playProvider).setPlaylist(entities);
+      ref.read(playProvider).setPIndex(index);
+    }
     ref.read(playProvider).play(entity: entity);
-    ref.read(playProvider).getMetadata(entity);
-    ref.read(playProvider).setPlaylist(entities);
-    ref.read(playProvider).setPIndex(index);
   }
 
   Widget subtitle(FileSystemEntity entity) {

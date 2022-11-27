@@ -6,9 +6,6 @@ import 'package:audiotagger/audiotagger.dart';
 import 'package:audiotagger/models/tag.dart';
 import 'package:file_manager/file_manager.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'entity_provider.dart';
 
 class PlayMusicProvider extends ChangeNotifier {
   bool _isPlaying = false;
@@ -67,36 +64,16 @@ class PlayMusicProvider extends ChangeNotifier {
       final tagger = Audiotagger();
       _tag = await tagger.readTags(path: entity.path);
       _artwork = await tagger.readArtwork(path: entity.path);
-      print(
-          "Taaaaaaaaaaaaaaaaaaaaaaaaggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg");
-      print("artist: ${_tag?.artist}");
-      print("title: ${_tag?.title}");
-      print("artwork: ${_tag?.artwork}");
-      print("album: ${_tag?.album}");
-      print("albumArtist: ${_tag?.albumArtist}");
-      print("comment: ${_tag?.comment}");
-      print("discNumber: ${_tag?.discNumber}");
-      print("genre: ${_tag?.genre}");
-      print("year: ${_tag?.year}");
-      print("discTotal: ${_tag?.discTotal}");
-      print("lyrics: ${_tag?.lyrics}");
-      print("trackNumber: ${_tag?.trackNumber}");
-      print("trackTotal: ${_tag?.trackTotal}");
-      print(
-          "Taaaaaaaaaaaaaaaaaaaaaaaaggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg");
     }
     notifyListeners();
   }
 
   retrieveArtworks(List entities) async {
-    _artworks = List.generate(length, (index) => null);
+    _artworks = List.generate(entities.length, (index) => null);
     final tagger = Audiotagger();
     for (var e in entities) {
-      //the problem is "entities" which want to iterate all the element
-      // even if they are not present anymore.
       if (FileManager.isFile(e) && FileManager.getFileExtension(e) == "mp3") {
         var artwork = await tagger.readArtwork(path: e.path);
-        _artworks.add(artwork);
         _artworks.insert(entities.indexOf(e), artwork);
         notifyListeners();
       }
