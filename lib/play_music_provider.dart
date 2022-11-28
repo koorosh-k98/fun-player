@@ -57,7 +57,7 @@ class PlayMusicProvider extends ChangeNotifier {
     assetsAudioPlayer.pause();
   }
 
-  getMetadata(entity) async {
+  retrieveMetadata(entity) async {
     _artwork = null;
 
     if (FileManager.getFileExtension(entity) == "mp3") {

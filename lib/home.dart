@@ -220,9 +220,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                         isDismissible: false,
                         context: context,
                         builder: (context) => PlayScreen(
-                          entity: ref.read(entityProvider).entity,
-                          artwork: ref.read(playProvider).artwork,
-                          tag: ref.read(playProvider).tag,
+                          // entity: ref.read(entityProvider).entity,
+                          // artwork: ref.read(playProvider).artwork,
+                          // tag: ref.read(playProvider).tag,
+                          playProvider: playProvider,
+                          entityProvider:entityProvider,
                         ),
                       );
                     },
@@ -376,7 +378,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     FileSystemEntity? currentEntity = ref.read(entityProvider).entity;
     if (currentEntity != entity) {
       ref.read(entityProvider).setEntity(entity);
-      ref.read(playProvider).getMetadata(entity);
+      ref.read(playProvider).retrieveMetadata(entity);
       ref.read(playProvider).setPlaylist(entities);
       ref.read(playProvider).setPIndex(index);
     }

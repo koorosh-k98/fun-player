@@ -46,6 +46,7 @@ dependencies:
   id3: ^1.0.2
   audiotagger: ^2.2.1
   marquee: ^2.2.3
+  palette_generator: ^0.3.3+2
 
 
 
