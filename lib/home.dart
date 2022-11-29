@@ -201,7 +201,17 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     controller.openDirectory(entity);
                                     getTitle();
                                   } else {
-                                    myPlay(index, entity, entities);
+                                    var audioEntities = entities
+                                        .where((e) =>
+                                            !FileManager.isDirectory(e) &&
+                                            (FileManager.getFileExtension(e) ==
+                                                    "mp3" ||
+                                                FileManager.getFileExtension(
+                                                        e) ==
+                                                    "m4a"))
+                                        .toList();
+                                    index = audioEntities.indexOf(entity);
+                                    myPlay(index, entity, audioEntities);
                                   }
                                 }),
                           );
@@ -224,7 +234,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           // artwork: ref.read(playProvider).artwork,
                           // tag: ref.read(playProvider).tag,
                           playProvider: playProvider,
-                          entityProvider:entityProvider,
+                          entityProvider: entityProvider,
                         ),
                       );
                     },
@@ -238,6 +248,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       height: 90,
                       width: double.infinity,
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
                             decoration: const BoxDecoration(
@@ -302,10 +313,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                           ),
                           const Spacer(),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            mainAxisAlignment: MainAxisAlignment.end,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               IconButton(
+                                  padding: EdgeInsets.zero,
                                   onPressed: rewind,
                                   icon: const Icon(
                                     Icons.fast_rewind,
@@ -313,6 +325,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     color: Colors.white,
                                   )),
                               IconButton(
+                                  padding: EdgeInsets.zero,
                                   onPressed: () {
                                     final myProvider = ref.read(playProvider);
 
@@ -328,19 +341,17 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     ref.watch(playProvider).isPlaying
                                         ? Icons.pause
                                         : Icons.play_arrow,
-                                    size: 35,
+                                    size: 45,
                                     color: Colors.white,
                                   )),
                               IconButton(
+                                  padding: EdgeInsets.zero,
                                   onPressed: forward,
                                   icon: const Icon(
                                     Icons.fast_forward_sharp,
                                     size: 30,
                                     color: Colors.white,
                                   )),
-                              const SizedBox(
-                                width: 15,
-                              )
                             ],
                           )
                         ],
@@ -374,7 +385,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     myPlay(index, playlist[index], playlist);
   }
 
-  void myPlay(int index, FileSystemEntity entity, List entities) {
+  void myPlay(int index, FileSystemEntity entity, List entities) async {
     FileSystemEntity? currentEntity = ref.read(entityProvider).entity;
     if (currentEntity != entity) {
       ref.read(entityProvider).setEntity(entity);
@@ -382,7 +393,8 @@ class _HomePageState extends ConsumerState<HomePage> {
       ref.read(playProvider).setPlaylist(entities);
       ref.read(playProvider).setPIndex(index);
     }
-    ref.read(playProvider).play(entity: entity);
+    await ref.read(playProvider).play(entity: entity);
+    ref.read(playProvider).setTotalDuration();
   }
 
   Widget subtitle(FileSystemEntity entity) {

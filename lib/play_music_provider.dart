@@ -12,7 +12,9 @@ class PlayMusicProvider extends ChangeNotifier {
 
   bool get isPlaying => _isPlaying;
 
-  final assetsAudioPlayer = AssetsAudioPlayer();
+  final _assetsAudioPlayer = AssetsAudioPlayer();
+
+  get assetsAudioPlayer => _assetsAudioPlayer;
 
   FileSystemEntity? classEntity;
 
@@ -40,12 +42,20 @@ class PlayMusicProvider extends ChangeNotifier {
 
   int get pIndex => _pIndex;
 
+  Duration _totalDuration = const Duration(seconds: 0);
+
+  Duration get totalDuration => _totalDuration;
+
+  Duration _currentDuration = const Duration(seconds: 0);
+
+  Duration get currentDuration => _currentDuration;
+
   play({required FileSystemEntity? entity}) {
     if (classEntity == entity) {
-      assetsAudioPlayer.play();
+      _assetsAudioPlayer.play();
     } else {
       classEntity = entity;
-      assetsAudioPlayer.open(Audio.file(entity!.path));
+      _assetsAudioPlayer.open(Audio.file(entity!.path));
     }
     _isPlaying = true;
     notifyListeners();
@@ -54,7 +64,31 @@ class PlayMusicProvider extends ChangeNotifier {
   pause() {
     _isPlaying = false;
     notifyListeners();
-    assetsAudioPlayer.pause();
+    _assetsAudioPlayer.pause();
+  }
+
+  setTotalDuration() {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _totalDuration = _assetsAudioPlayer.current.valueOrNull?.audio.duration ??
+          const Duration(seconds: 0);
+      notifyListeners();
+    });
+  }
+
+  setCurrentDuration() {
+    _currentDuration = _assetsAudioPlayer.currentPosition.valueOrNull ??
+        const Duration(seconds: 0);
+    notifyListeners();
+  }
+
+  seek(double to) {
+    setCurrentDuration();
+    double position = to / 100 * totalDuration.inSeconds;
+    _assetsAudioPlayer.seek(Duration(seconds: position.round()));
+  }
+
+  seekBy(duration) {
+    _assetsAudioPlayer.seekBy(duration);
   }
 
   retrieveMetadata(entity) async {
@@ -98,6 +132,8 @@ class PlayMusicProvider extends ChangeNotifier {
   @override
   void dispose() {
     super.dispose();
-    assetsAudioPlayer.dispose();
+    _assetsAudioPlayer.dispose();
   }
+
+
 }
