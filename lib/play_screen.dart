@@ -37,13 +37,15 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
 
   Key _refreshKey = UniqueKey();
 
-  void _handleLocalChanged() => setState(() {
-        _refreshKey = UniqueKey();
-      });
+  void _handleLocalChanged() {
+    _refreshKey = UniqueKey();
+  }
 
   @override
   void initState() {
     super.initState();
+    print(
+        "Valueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee:$value");
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       setColor();
       // startTimer();
@@ -52,20 +54,42 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
     });
   }
 
+  late var refPlayProvider;
+
+  @override
+  void didChangeDependencies() {
+    refPlayProvider = ref.read(widget.playProvider);
+    super.didChangeDependencies();
+  }
+
   addListenerToPosition() {
-    ref.read(widget.playProvider).assetsAudioPlayer.currentPosition.listen((event) {
-      // double total = double.parse(ref.read(widget.playProvider).totalDuration.inSeconds.toString());
-      double total = double.parse(ref.read(widget.playProvider).assetsAudioPlayer.current.valueOrNull?.audio.duration.inSeconds.toString() ??
-          const Duration(seconds: 0).inSeconds.toString());
-      print("Totaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaal: $total");
-      print("Eventttttttttttttttttttttttttttttttt: ${event.inSeconds}");
-      ref.read(widget.playProvider).setCurrentDuration();
-      // setState(() {
-        value = event.inSeconds/total*100;
-        // print("Value: $value");
-      // });
+    refPlayProvider.assetsAudioPlayer.currentPosition.listen((event) async {
+      double total =
+          double.parse(refPlayProvider.totalDuration.inSeconds.toString());
+      // double total = double.parse(refPlayProvider
+      //         .assetsAudioPlayer.current.valueOrNull?.audio.duration.inSeconds
+      //         .toString() ??
+      //     const Duration(seconds: 0).inSeconds.toString());
+      // print("Totaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaal: $total");
+      // print("Eventttttttttttttttttttttttttttttttt: ${event.inSeconds}");
+      refPlayProvider.setCurrentDuration();
+      value = event.inSeconds / total * 100;
       if (event.inSeconds == total) {
-        ref.read(widget.playProvider).pause();
+        print("value: $value");
+        List playlist = refPlayProvider.playlist;
+        int index = refPlayProvider.pIndex;
+        if (playlist.length - 1 == index) {
+          await refPlayProvider.pause();
+          // refPlayProvider.setCurrentDuration(0);
+          // print("done1");
+          refPlayProvider.seek(0.0);
+          // print("done2");
+        } else {
+          if (index < playlist.length - 1) {
+            index++;
+          }
+          myPlay(index, playlist[index], playlist);
+        }
       }
     });
   }
@@ -99,7 +123,7 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
   //
   // @override
   // void dispose() {
-  //   _timer.cancel();
+  //   // cancelListenerToPosition();
   //   super.dispose();
   // }
 
@@ -169,7 +193,7 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
                     Slider(
                       min: 0,
                       max: 100,
-                      value: value,
+                      value: value == double.nan ? 0 : value,
                       thumbColor: Colors.blueGrey,
                       activeColor: ref.watch(colorProvider).textColor,
                       onChanged: (val) {

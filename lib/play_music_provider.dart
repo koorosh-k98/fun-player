@@ -63,8 +63,8 @@ class PlayMusicProvider extends ChangeNotifier {
 
   pause() {
     _isPlaying = false;
-    notifyListeners();
     _assetsAudioPlayer.pause();
+    notifyListeners();
   }
 
   setTotalDuration() {
@@ -75,16 +75,19 @@ class PlayMusicProvider extends ChangeNotifier {
     });
   }
 
+
   setCurrentDuration() {
-    _currentDuration = _assetsAudioPlayer.currentPosition.valueOrNull ??
-        const Duration(seconds: 0);
+
+      _currentDuration = _assetsAudioPlayer.currentPosition.valueOrNull ??
+          const Duration(seconds: 0);
+
     notifyListeners();
   }
 
   seek(double to) {
-    setCurrentDuration();
     double position = to / 100 * totalDuration.inSeconds;
     _assetsAudioPlayer.seek(Duration(seconds: position.round()));
+    // setCurrentDuration();
   }
 
   seekBy(duration) {
@@ -134,6 +137,4 @@ class PlayMusicProvider extends ChangeNotifier {
     super.dispose();
     _assetsAudioPlayer.dispose();
   }
-
-
 }
