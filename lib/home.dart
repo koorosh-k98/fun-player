@@ -33,6 +33,13 @@ class _HomePageState extends ConsumerState<HomePage> {
   final titleProvider = ChangeNotifierProvider((_) => TitleProvider());
   final tagger = Audiotagger();
 
+  Key _refreshKey = UniqueKey();
+
+  void _handleLocalChanged() {
+    _refreshKey = UniqueKey();
+  }
+
+
   @override
   void initState() {
     super.initState();
@@ -285,12 +292,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   height: 35,
                                   width: w,
                                   child: Marquee(
+                                    key: _refreshKey,
                                     text: FileManager.basename(
                                         ref.read(entityProvider).entity),
                                     style: const TextStyle(
                                         fontSize: 18, color: Colors.white),
                                     velocity: 30,
                                     blankSpace: w,
+                                    startPadding: 50,
                                     fadingEdgeStartFraction: 0.2,
                                     fadingEdgeEndFraction: 0.2,
                                   ),
@@ -320,7 +329,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   padding: EdgeInsets.zero,
                                   onPressed: rewind,
                                   icon: const Icon(
-                                    Icons.fast_rewind,
+                                    Icons.skip_previous,
                                     size: 30,
                                     color: Colors.white,
                                   )),
@@ -348,7 +357,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   padding: EdgeInsets.zero,
                                   onPressed: forward,
                                   icon: const Icon(
-                                    Icons.fast_forward_sharp,
+                                    Icons.skip_next,
                                     size: 30,
                                     color: Colors.white,
                                   )),
@@ -386,6 +395,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void myPlay(int index, FileSystemEntity entity, List entities) async {
+    _handleLocalChanged();
     FileSystemEntity? currentEntity = ref.read(entityProvider).entity;
     if (currentEntity != entity) {
       ref.read(entityProvider).setEntity(entity);

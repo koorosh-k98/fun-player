@@ -61,7 +61,7 @@ class PlayMusicProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  pause() {
+  pause(){
     _isPlaying = false;
     _assetsAudioPlayer.pause();
     notifyListeners();

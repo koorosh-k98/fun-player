@@ -28,13 +28,11 @@ class _PermissionHandleState extends State<PermissionHandle>  with WidgetsBindin
     if(state == AppLifecycleState.resumed){
       var status = await Permission.storage.status;
       if (status.isGranted) {
-        print("granted");
         Navigator.of(context)
             .push(MaterialPageRoute(builder: (ctx) {
           return const HomePage();
         }));
       } else {
-        print("denied");
         showAlertDialog(context,
             "Unfortunately we don't have access to your device storage.");
       }

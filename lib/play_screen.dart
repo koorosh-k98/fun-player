@@ -30,8 +30,6 @@ class PlayScreen extends ConsumerStatefulWidget {
 }
 
 class _PlayScreenState extends ConsumerState<PlayScreen> {
-  // Color backgroundColor = Colors.white60;
-  // Color textColor = Colors.black;
   final colorProvider = ChangeNotifierProvider((ref) => ColorProvider());
   double value = 0;
 
@@ -44,8 +42,6 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
   @override
   void initState() {
     super.initState();
-    print(
-        "Valueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee:$value");
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       setColor();
       // startTimer();
@@ -55,35 +51,29 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
   }
 
   late var refPlayProvider;
+  late var refEntityProvider;
+  late var refColorProvider;
 
   @override
   void didChangeDependencies() {
     refPlayProvider = ref.read(widget.playProvider);
+    refEntityProvider = ref.read(widget.entityProvider);
+    refColorProvider = ref.read(colorProvider);
     super.didChangeDependencies();
   }
 
   addListenerToPosition() {
     refPlayProvider.assetsAudioPlayer.currentPosition.listen((event) async {
-      double total =
-          double.parse(refPlayProvider.totalDuration.inSeconds.toString());
-      // double total = double.parse(refPlayProvider
-      //         .assetsAudioPlayer.current.valueOrNull?.audio.duration.inSeconds
-      //         .toString() ??
-      //     const Duration(seconds: 0).inSeconds.toString());
-      // print("Totaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaal: $total");
-      // print("Eventttttttttttttttttttttttttttttttt: ${event.inSeconds}");
       refPlayProvider.setCurrentDuration();
-      value = event.inSeconds / total * 100;
-      if (event.inSeconds == total) {
-        print("value: $value");
+      double total =
+          double.parse(refPlayProvider.totalDuration.inMilliseconds.toString());
+      if (total != 0) value = event.inSeconds / total * 100000;
+      if (event.inMilliseconds >= total-500) {
         List playlist = refPlayProvider.playlist;
         int index = refPlayProvider.pIndex;
         if (playlist.length - 1 == index) {
-          await refPlayProvider.pause();
-          // refPlayProvider.setCurrentDuration(0);
-          // print("done1");
-          refPlayProvider.seek(0.0);
-          // print("done2");
+          refPlayProvider.pause();
+           refPlayProvider.seek(0.0);
         } else {
           if (index < playlist.length - 1) {
             index++;
@@ -93,6 +83,8 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
       }
     });
   }
+
+
 
   // setValue() {
   //   if (ref.watch(widget.playProvider).totalDuration.inSeconds != 0) {
@@ -248,7 +240,7 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
                           padding: EdgeInsets.zero,
                           onPressed: rewind,
                           icon: Icon(
-                            Icons.fast_rewind,
+                            Icons.skip_previous,
                             size: 50,
                             color: ref.watch(colorProvider).textColor,
                           ),
@@ -268,7 +260,7 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
                                 // startTimer();
                                 myProvider.play(
                                     entity:
-                                        ref.read(widget.entityProvider).entity);
+                                        refEntityProvider.entity);
                               }
                             },
                             icon: Icon(
@@ -284,7 +276,7 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
                           padding: EdgeInsets.zero,
                           onPressed: forward,
                           icon: Icon(
-                            Icons.fast_forward_sharp,
+                            Icons.skip_next,
                             size: 50,
                             color: ref.watch(colorProvider).textColor,
                           ),
@@ -342,12 +334,12 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
 
   void setColor() async {
     PaletteGenerator paletteGenerator;
-    if (ref.read(widget.playProvider).artwork == null) {
+    if (refPlayProvider.artwork == null) {
       paletteGenerator =
           PaletteGenerator.fromColors([PaletteColor(Colors.white60, 0)]);
     } else {
       paletteGenerator = await PaletteGenerator.fromImageProvider(
-        Image.memory(ref.read(widget.playProvider).artwork!).image,
+        Image.memory(refPlayProvider.artwork!).image,
       );
     }
     Color backgroundColor =
@@ -358,8 +350,8 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
     // ? paletteGenerator.darkMutedColor?.color
     // : paletteGenerator.lightMutedColor?.color)??
     // Colors.black;
-    ref.read(colorProvider).setBackgroundColor(backgroundColor);
-    ref.read(colorProvider).setTextColor(textColor);
+    refColorProvider.setBackgroundColor(backgroundColor);
+    refColorProvider.setTextColor(textColor);
   }
 
   forward() {
@@ -382,16 +374,16 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
 
   void myPlay(int index, FileSystemEntity entity, List entities) async {
     _handleLocalChanged();
-    FileSystemEntity? currentEntity = ref.read(widget.entityProvider).entity;
+    FileSystemEntity? currentEntity = refEntityProvider.entity;
     if (currentEntity != entity) {
-      ref.read(widget.entityProvider).setEntity(entity);
-      await ref.read(widget.playProvider).retrieveMetadata(entity);
-      ref.read(widget.playProvider).setPlaylist(entities);
-      ref.read(widget.playProvider).setPIndex(index);
+      refEntityProvider.setEntity(entity);
+      await refPlayProvider.retrieveMetadata(entity);
+      refPlayProvider.setPlaylist(entities);
+      refPlayProvider.setPIndex(index);
       setColor();
     }
-    await ref.read(widget.playProvider).play(entity: entity);
-    ref.read(widget.playProvider).setTotalDuration();
+    await refPlayProvider.play(entity: entity);
+    refPlayProvider.setTotalDuration();
   }
 
   // forward10s() {
