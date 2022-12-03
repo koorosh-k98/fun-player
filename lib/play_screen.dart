@@ -26,13 +26,17 @@ class PlayScreen extends ConsumerStatefulWidget {
   ConsumerState<PlayScreen> createState() => _PlayScreenState();
 }
 
-class _PlayScreenState extends ConsumerState<PlayScreen> {
+class _PlayScreenState extends ConsumerState<PlayScreen>
+    with SingleTickerProviderStateMixin {
   final colorProvider = ChangeNotifierProvider((ref) => ColorProvider());
 
   late var refPlayProvider;
   late var refEntityProvider;
   late var refColorProvider;
   double speed = 1.0;
+
+  AnimationController? animationController;
+  Animation<double>? sizeAnimation;
 
   double value = 0;
 
@@ -41,6 +45,7 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
   @override
   void initState() {
     super.initState();
+    animation();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       setColor();
       ref
@@ -50,12 +55,27 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
     });
   }
 
+  animation() {
+    animationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 200));
+    sizeAnimation = TweenSequence(<TweenSequenceItem<double>>[
+      TweenSequenceItem(tween: Tween(begin: 30, end: 50), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 50, end: 30), weight: 50),
+    ]).animate(animationController!);
+  }
+
   @override
   void didChangeDependencies() {
     refPlayProvider = ref.read(widget.playProvider);
     refEntityProvider = ref.read(widget.entityProvider);
     refColorProvider = ref.read(colorProvider);
     super.didChangeDependencies();
+  }
+
+  @override
+  void dispose() {
+    animationController!.dispose();
+    super.dispose();
   }
 
   // addListenerToPosition() {
@@ -178,23 +198,31 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
                                   ))
                             ],
                           ),
-                          IconButton(
-                              onPressed: () {
-                                ref.watch(widget.favoriteProvider).isFavorite
-                                    ? ref.read(widget.favoriteProvider).remove(
+                          AnimatedBuilder(
+                            animation: animationController!,
+                            builder: ((context, child) {
+                              return IconButton(
+                                  padding: EdgeInsets.zero,
+                                  onPressed: () {
+                                    animationController!.reset();
+                                    animationController!.forward();
+                                    ref.watch(widget.favoriteProvider).isFavorite
+                                        ? ref.read(widget.favoriteProvider).remove(
                                         ref.read(widget.entityProvider).entity)
-                                    : ref.read(widget.favoriteProvider).add(
+                                        : ref.read(widget.favoriteProvider).add(
                                         ref.read(widget.entityProvider).entity);
-                              },
-                              icon: Icon(
-                                Icons.favorite,
-                                color: ref
+                                  },
+                                  icon: Icon(
+                                    Icons.favorite,
+                                    color: ref
                                         .watch(widget.favoriteProvider)
                                         .isFavorite
-                                    ? Colors.red
-                                    : ref.read(colorProvider).textColor,
-                                size: 30,
-                              ))
+                                        ? Colors.red
+                                        : ref.read(colorProvider).textColor,
+                                    size: sizeAnimation!.value,
+                                  ));
+                            }),
+                          ),
                         ],
                       ),
                     ),
@@ -245,9 +273,9 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
                           padding: EdgeInsets.zero,
                           onPressed: () => ref
                               .read(widget.playProvider)
-                              .seekBy(const Duration(seconds: -10)),
+                              .seekBy(const Duration(seconds: -5)),
                           icon: Icon(
-                            Icons.replay_10_rounded,
+                            Icons.replay_5_rounded,
                             size: 50,
                             color: ref.watch(colorProvider).textColor,
                           ),
@@ -303,9 +331,9 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
                           padding: EdgeInsets.zero,
                           onPressed: () => ref
                               .read(widget.playProvider)
-                              .seekBy(const Duration(seconds: 10)),
+                              .seekBy(const Duration(seconds: 5)),
                           icon: Icon(
-                            Icons.forward_10_rounded,
+                            Icons.forward_5_rounded,
                             size: 50,
                             color: ref.watch(colorProvider).textColor,
                           ),

@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
-import 'package:player/favorite_provider.dart';
 import 'package:player/play_screen.dart';
 
 class Favorite extends ConsumerStatefulWidget {
