@@ -4,6 +4,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:player/home.dart';
 import 'package:player/permission.dart';
 
+import 'favorite.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(ProviderScope(child:MyApp(

@@ -47,6 +47,7 @@ dependencies:
   audiotagger: ^2.2.1
   marquee: ^2.2.3
   palette_generator: ^0.3.3+2
+  shared_preferences: ^2.0.15
 
 
 

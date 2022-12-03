@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:file_manager/file_manager.dart';
@@ -11,19 +10,17 @@ import 'package:player/color_provider.dart';
 class PlayScreen extends ConsumerStatefulWidget {
   PlayScreen(
       {
-      //   required this.entity,
       // required this.artwork,
-      // required this.tag,
       required this.playProvider,
       required this.entityProvider,
+      required this.favoriteProvider,
       Key? key})
       : super(key: key);
 
-  // FileSystemEntity? entity;
-  // Uint8List? artwork;
-  // Tag? tag;
+  // final artwork;
   final playProvider;
   final entityProvider;
+  final favoriteProvider;
 
   @override
   ConsumerState<PlayScreen> createState() => _PlayScreenState();
@@ -31,28 +28,27 @@ class PlayScreen extends ConsumerStatefulWidget {
 
 class _PlayScreenState extends ConsumerState<PlayScreen> {
   final colorProvider = ChangeNotifierProvider((ref) => ColorProvider());
-  double value = 0;
-
-  Key _refreshKey = UniqueKey();
-
-  void _handleLocalChanged() {
-    _refreshKey = UniqueKey();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      setColor();
-      // startTimer();
-      // setValue();
-      addListenerToPosition();
-    });
-  }
 
   late var refPlayProvider;
   late var refEntityProvider;
   late var refColorProvider;
+  double speed = 1.0;
+
+  double value = 0;
+
+  Key _refreshKey = UniqueKey();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      setColor();
+      ref
+          .read(widget.favoriteProvider)
+          .checkFavorite(ref.read(widget.entityProvider).entity);
+      // addListenerToPosition();
+    });
+  }
 
   @override
   void didChangeDependencies() {
@@ -62,61 +58,27 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
     super.didChangeDependencies();
   }
 
-  addListenerToPosition() {
-    refPlayProvider.assetsAudioPlayer.currentPosition.listen((event) async {
-      refPlayProvider.setCurrentDuration();
-      double total =
-          double.parse(refPlayProvider.totalDuration.inMilliseconds.toString());
-      if (total != 0) value = event.inSeconds / total * 100000;
-      if (event.inMilliseconds >= total-500) {
-        List playlist = refPlayProvider.playlist;
-        int index = refPlayProvider.pIndex;
-        if (playlist.length - 1 == index) {
-          refPlayProvider.pause();
-           refPlayProvider.seek(0.0);
-        } else {
-          if (index < playlist.length - 1) {
-            index++;
-          }
-          myPlay(index, playlist[index], playlist);
-        }
-      }
-    });
-  }
-
-
-
-  // setValue() {
-  //   if (ref.watch(widget.playProvider).totalDuration.inSeconds != 0) {
-  //     setState(() {
-  //       value = ref.read(widget.playProvider).currentDuration.inSeconds /
-  //           ref.read(widget.playProvider).totalDuration.inSeconds *
-  //           100.0;
-  //     });
-  //   } else {
-  //     setState(() {
-  //       value = 0;
-  //     });
-  //   }
-  // }
-
-  // late Timer _timer;
-  //
-  // void startTimer() {
-  //   const oneSec = Duration(seconds: 1);
-  //   _timer = Timer.periodic(
-  //     oneSec,
-  //     (Timer timer) {
-  //       ref.read(widget.playProvider).setCurrentDuration();
-  //       setValue();
-  //     },
-  //   );
-  // }
-  //
-  // @override
-  // void dispose() {
-  //   // cancelListenerToPosition();
-  //   super.dispose();
+  // addListenerToPosition() {
+  //   refPlayProvider.assetsAudioPlayer.currentPosition.listen((event) async {
+  //     print("hi");
+  //     refPlayProvider.setCurrentDuration();
+  //     double total =
+  //         double.parse(refPlayProvider.totalDuration.inMilliseconds.toString());
+  //     if (total != 0) value = event.inSeconds / total * 100000;
+  //     if (event.inMilliseconds >= total - 500) {
+  //       List playlist = refPlayProvider.playlist;
+  //       int index = refPlayProvider.pIndex;
+  //       if (playlist.length - 1 == index) {
+  //         refPlayProvider.pause();
+  //         refPlayProvider.seek(0.0);
+  //       } else {
+  //         if (index < playlist.length - 1) {
+  //           index++;
+  //         }
+  //         myPlay(index, playlist[index], playlist);
+  //       }
+  //     }
+  //   });
   // }
 
   @override
@@ -135,14 +97,13 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
               ),
               artwork(width: w),
               const SizedBox(
-                height: 35,
+                height: 25,
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 35),
                 height: 40,
                 child: Marquee(
                   key: _refreshKey,
-                  // startAfter: const Duration(seconds: 3),
                   startPadding: 50,
                   text: (ref.read(widget.playProvider).tag.title != ""
                       ? ref.read(widget.playProvider).tag.title
@@ -153,8 +114,6 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
                     color: ref.watch(colorProvider).textColor,
                   ),
                   blankSpace: w,
-
-                  // pauseAfterRound: const Duration(seconds: 3),
                   fadingEdgeStartFraction: 0.1,
                   fadingEdgeEndFraction: 0.1,
                 ),
@@ -179,20 +138,77 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
               const Spacer(),
               SizedBox(
                 width: double.infinity,
-                height: 200,
+                height: 250,
                 child: Column(
                   children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              IconButton(
+                                  onPressed: () {
+                                    ref
+                                        .read(widget.playProvider)
+                                        .decreaseSpeed();
+                                  },
+                                  icon: Icon(
+                                    Icons.remove,
+                                    color: ref.read(colorProvider).textColor,
+                                    size: 30,
+                                  )),
+                              Text(
+                                "${ref.watch(widget.playProvider).speed.toStringAsPrecision(ref.watch(widget.playProvider).speed >= 1 ? 2 : 1)}x",
+                                style: TextStyle(
+                                    color: ref.read(colorProvider).textColor,
+                                    fontSize: 20),
+                              ),
+                              IconButton(
+                                  onPressed: () {
+                                    ref
+                                        .read(widget.playProvider)
+                                        .increaseSpeed();
+                                  },
+                                  icon: Icon(
+                                    Icons.add,
+                                    color: ref.read(colorProvider).textColor,
+                                    size: 30,
+                                  ))
+                            ],
+                          ),
+                          IconButton(
+                              onPressed: () {
+                                ref.watch(widget.favoriteProvider).isFavorite
+                                    ? ref.read(widget.favoriteProvider).remove(
+                                        ref.read(widget.entityProvider).entity)
+                                    : ref.read(widget.favoriteProvider).add(
+                                        ref.read(widget.entityProvider).entity);
+                              },
+                              icon: Icon(
+                                Icons.favorite,
+                                color: ref
+                                        .watch(widget.favoriteProvider)
+                                        .isFavorite
+                                    ? Colors.red
+                                    : ref.read(colorProvider).textColor,
+                                size: 30,
+                              ))
+                        ],
+                      ),
+                    ),
                     Slider(
                       min: 0,
                       max: 100,
-                      value: value == double.nan ? 0 : value,
+                      value: refPlayProvider.sliderValue,
                       thumbColor: Colors.blueGrey,
                       activeColor: ref.watch(colorProvider).textColor,
                       onChanged: (val) {
-                        setState(() {
-                          value = val;
-                          ref.read(widget.playProvider).seek(value);
-                        });
+                        // setState(() {
+                        value = val;
+                        ref.read(widget.playProvider).seek(value);
+                        // });
                       },
                     ),
                     Padding(
@@ -255,12 +271,14 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
 
                               if (myProvider.isPlaying) {
                                 myProvider.pause();
-                                // _timer.cancel();
                               } else {
-                                // startTimer();
                                 myProvider.play(
-                                    entity:
-                                        refEntityProvider.entity);
+                                    entity: refEntityProvider.entity,
+                                    next: forward,
+                                    prev: rewind);
+                                ref
+                                    .read(widget.playProvider)
+                                    .setTotalDuration();
                               }
                             },
                             icon: Icon(
@@ -327,7 +345,9 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
             padding: const EdgeInsets.all(30),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(30),
-              child: Image.memory(ref.watch(widget.playProvider).artwork!),
+              child: Hero(
+                  tag: ref.watch(widget.playProvider).artwork.toString(),
+                  child: Image.memory(ref.watch(widget.playProvider).artwork!)),
             ),
           );
   }
@@ -347,9 +367,6 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
     Color textColor = (backgroundColor.computeLuminance() > 0.5
         ? Colors.black
         : Colors.white60);
-    // ? paletteGenerator.darkMutedColor?.color
-    // : paletteGenerator.lightMutedColor?.color)??
-    // Colors.black;
     refColorProvider.setBackgroundColor(backgroundColor);
     refColorProvider.setTextColor(textColor);
   }
@@ -373,42 +390,19 @@ class _PlayScreenState extends ConsumerState<PlayScreen> {
   }
 
   void myPlay(int index, FileSystemEntity entity, List entities) async {
-    _handleLocalChanged();
+    _refreshKey = UniqueKey();
     FileSystemEntity? currentEntity = refEntityProvider.entity;
     if (currentEntity != entity) {
       refEntityProvider.setEntity(entity);
       await refPlayProvider.retrieveMetadata(entity);
       refPlayProvider.setPlaylist(entities);
       refPlayProvider.setPIndex(index);
+      await ref.read(widget.favoriteProvider).checkFavorite(entity);
       setColor();
     }
-    await refPlayProvider.play(entity: entity);
+    await refPlayProvider.play(entity: entity, next: forward, prev: rewind);
     refPlayProvider.setTotalDuration();
   }
-
-  // forward10s() {
-  // double duration =
-  //     double.parse(ref.read(widget.playProvider).currentDuration.inSeconds.toString());
-  // print("duration: ${duration.toString()}");
-  // double total = double.parse(ref.read(widget.playProvider).totalDuration.inSeconds.toString());
-  // print("total: ${total.toString()}");
-  // if (duration < total - 10.0) {
-  //   duration += 10.0;
-  //   ref.read(widget.playProvider).seek(duration/total);
-  //   print("done: $duration");
-  // }
-  // }
-
-  // rewind10s() {
-  // double duration =
-  //     double.parse(ref.read(widget.playProvider).currentDuration.inSeconds.toString());
-  // double total = double.parse(ref.read(widget.playProvider).totalDuration.inSeconds.toString());
-  // print("duration: ${duration.toString()}");
-  // if (duration > 10) {
-  //   duration -= 10;
-  //   ref.read(widget.playProvider).seek(duration/total);
-  // }
-  // }
 
   String intToTimeLeft(int value) {
     int h, m, s;

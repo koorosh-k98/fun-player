@@ -6,6 +6,7 @@ import 'package:audiotagger/audiotagger.dart';
 import 'package:audiotagger/models/tag.dart';
 import 'package:file_manager/file_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PlayMusicProvider extends ChangeNotifier {
   bool _isPlaying = false;
@@ -22,7 +23,7 @@ class PlayMusicProvider extends ChangeNotifier {
 
   List _artworks = [];
 
-  int _length = 0;
+  // int _length = 0;
 
   Tag? _tag;
 
@@ -32,7 +33,7 @@ class PlayMusicProvider extends ChangeNotifier {
 
   List get artworks => _artworks;
 
-  int get length => _length;
+  // int get length => _length;
 
   List _playList = [];
 
@@ -50,20 +51,74 @@ class PlayMusicProvider extends ChangeNotifier {
 
   Duration get currentDuration => _currentDuration;
 
-  play({required FileSystemEntity? entity}) {
+  double _sliderValue = 0.0;
+
+  double get sliderValue => _sliderValue;
+
+  double _speed = 1.0;
+
+  double get speed => _speed;
+
+  increaseSpeed() {
+    if (_speed <= 5.9) {
+      _speed += 0.2;
+      _assetsAudioPlayer.setPlaySpeed(_speed);
+      notifyListeners();
+    }
+  }
+
+  decreaseSpeed() {
+    if (_speed >= 0.3) {
+      _speed -= 0.2;
+      _assetsAudioPlayer.setPlaySpeed(_speed);
+      notifyListeners();
+    }
+  }
+
+  play(
+      {required FileSystemEntity? entity,
+      Function? next,
+      Function? prev}) async {
     if (classEntity == entity) {
       _assetsAudioPlayer.play();
     } else {
       classEntity = entity;
-      _assetsAudioPlayer.open(Audio.file(entity!.path));
+      // final tagger = Audiotagger();
+      // Uint8List? artwork = await tagger.readArtwork(path: entity!.path);
+
+      // print("imgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg: "+img.toString());
+      Metas metas = Metas(
+        title: _tag?.title != "" ? _tag?.title : FileManager.basename(entity),
+        artist: _tag?.artist ?? "Unknown artist",
+        // image: MetasImage.file(artwork.toString()),
+      );
+      _assetsAudioPlayer.open(
+        Audio.file(entity!.path, metas: metas),
+        headPhoneStrategy: HeadPhoneStrategy.pauseOnUnplug,
+        playInBackground: PlayInBackground.enabled,
+        showNotification: true,
+        notificationSettings: NotificationSettings(
+            customNextAction: (aap) => next!(),
+            customPrevAction: (aap) => prev!()),
+      );
     }
     _isPlaying = true;
     notifyListeners();
   }
 
-  pause(){
+  pause() {
     _isPlaying = false;
     _assetsAudioPlayer.pause();
+    notifyListeners();
+  }
+
+  pausePlaying() {
+    _isPlaying = false;
+    notifyListeners();
+  }
+
+  startPlaying() {
+    _isPlaying = true;
     notifyListeners();
   }
 
@@ -75,12 +130,16 @@ class PlayMusicProvider extends ChangeNotifier {
     });
   }
 
-
   setCurrentDuration() {
+    _currentDuration = _assetsAudioPlayer.currentPosition.valueOrNull ??
+        const Duration(seconds: 0);
 
-      _currentDuration = _assetsAudioPlayer.currentPosition.valueOrNull ??
-          const Duration(seconds: 0);
+    notifyListeners();
+  }
 
+  setSliderValue(event) {
+    double total = double.parse(totalDuration.inMilliseconds.toString());
+    total != 0 ? _sliderValue = event.inSeconds / total * 100000 : 0.0;
     notifyListeners();
   }
 
@@ -117,24 +176,32 @@ class PlayMusicProvider extends ChangeNotifier {
     }
   }
 
-  setPlaylist(List entities) {
+  setPlaylist(List entities) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setStringList(
+        "entities",
+        entities.map((element) {
+          return element.path.toString();
+        }).toList());
     _playList = entities;
     notifyListeners();
   }
 
-  setPIndex(int index) {
+  setPIndex(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setInt("pIndex", index);
     _pIndex = index;
     notifyListeners();
   }
 
-  setLength(int length) {
-    _length = length;
-    notifyListeners();
-  }
+// setLength(int length) {
+//   _length = length;
+//   notifyListeners();
+// }
 
-  @override
-  void dispose() {
-    super.dispose();
-    _assetsAudioPlayer.dispose();
-  }
+// @override
+// void dispose() {
+//   super.dispose();
+//   // _assetsAudioPlayer.dispose();
+// }
 }

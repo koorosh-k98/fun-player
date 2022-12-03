@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:audiotagger/audiotagger.dart';
 import 'package:file_manager/file_manager.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,10 @@ import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:player/play_music_provider.dart';
 import 'package:player/play_screen.dart';
 import 'package:player/title_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'entity_provider.dart';
+import 'favorite.dart';
+import 'favorite_provider.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   static const id = 'home_screen';
@@ -30,21 +34,98 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   final playProvider = ChangeNotifierProvider((_) => PlayMusicProvider());
   final entityProvider = ChangeNotifierProvider((_) => EntityProvider());
+  final favoriteProvider = ChangeNotifierProvider((ref) => FavoriveProvider());
   final titleProvider = ChangeNotifierProvider((_) => TitleProvider());
   final tagger = Audiotagger();
 
   Key _refreshKey = UniqueKey();
 
-  void _handleLocalChanged() {
-    _refreshKey = UniqueKey();
-  }
-
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      retrieveLastState();
       getTitle();
+      addListenerToPosition();
+      addPauseListener();
+    });
+  }
+
+  retrieveLastState() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getString("entity") != null) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        controller.openDirectory(File(prefs.getString("entity")!).parent);
+        getTitle();
+        // print("curenttttttttttttttttttttttttttttttttttttt: " +
+        //     controller.getCurrentPath);
+      });
+      ref.read(entityProvider).setEntity(File(prefs.getString("entity") ?? ""));
+      List playlist = prefs.getStringList("entities") != null
+          ? prefs.getStringList("entities")!.map((e) {
+              // print(e);
+              return File(e);
+            }).toList()
+          : [];
+      int index = prefs.getInt("pIndex") ?? 0;
+      // print(
+      // "indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx: " +
+      //     pIndex.toString());
+      // print(
+      //     "playlistttttttttttttttttttttttttttttttttttttttttttttttttttttttt: " +
+      //         playlist.toString());
+      myPlay(index, playlist[index], playlist, false);
+    }
+  }
+
+  //to pause when another application is playing a song
+  addPauseListener() {
+    ref.read(playProvider).assetsAudioPlayer.playerState.listen((event) {
+      // print(
+      //     "Stateeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee: " +
+      //         event.toString());
+      if (event.toString() == "PlayerState.pause") {
+        ref.read(playProvider).pausePlaying();
+      }
+      if (event.toString() == "PlayerState.play") {
+        ref.read(playProvider).startPlaying();
+      }
+    });
+  }
+
+  addListenerToPosition() {
+    ref
+        .read(playProvider)
+        .assetsAudioPlayer
+        .currentPosition
+        .listen((event) async {
+      // print(
+      //     "Eenttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt: ${event.inMilliseconds}");
+      ref.read(playProvider).setCurrentDuration();
+      ref.read(playProvider).setSliderValue(event);
+      double total = double.parse(
+          ref.read(playProvider).totalDuration.inMilliseconds.toString());
+      // print(
+      //     "Totallllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll: $total");
+      if (total != 0 && event.inMilliseconds >= total - 500) {
+        List playlist = ref.read(playProvider).playlist;
+        // print(
+        //     "lengthhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh: ${playlist.length}");
+        if (playlist.isNotEmpty) {
+          int index = ref.read(playProvider).pIndex;
+          // print(
+          //     "indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx: $index");
+          if (playlist.length - 1 == index) {
+            ref.read(playProvider).pause();
+            ref.read(playProvider).seek(0.0);
+          } else {
+            if (index < playlist.length - 1) {
+              index++;
+            }
+            myPlay(index, playlist[index], playlist);
+          }
+        }
+      }
     });
   }
 
@@ -76,6 +157,10 @@ class _HomePageState extends ConsumerState<HomePage> {
       child: Scaffold(
           appBar: AppBar(
             actions: [
+              IconButton(
+                onPressed: () => navigateToFavorites(context),
+                icon: const Icon(Icons.favorite),
+              ),
               IconButton(
                 onPressed: () => sort(context),
                 icon: const Icon(Icons.sort_rounded),
@@ -116,11 +201,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   FileManager.getFileExtension(e) == "mp3") ||
                               FileManager.getFileExtension(e) == "m4a")
                           .toList();
-
-                      // WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                      // ref.read(playProvider).setLength(entities.length);
-                      // ref.read(playProvider).retrieveArtworks(entities);
-                      // });
                       return ListView.builder(
                         itemCount: entities.length,
                         itemBuilder: (context, index) {
@@ -146,8 +226,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                                     snapshot.data!),
                                               );
                                             } else if (snapshot.hasError) {
-                                              print(
-                                                  "errorrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr${snapshot.error}");
+                                              print("error: ${snapshot.error}");
                                             } else {
                                               return Center(
                                                 child: Text(
@@ -161,40 +240,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                             }
                                             return Container();
                                           },
-                                        )
-                                        // Consumer(
-                                        //     builder: (context, ref, _) {
-                                        //   if (ref
-                                        //       .watch(playProvider)
-                                        //       .artworks
-                                        //       .isNotEmpty) {
-                                        //     return (ref
-                                        //                 .watch(playProvider)
-                                        //                 .artworks[index] ==
-                                        //             null)
-                                        //         ? Center(
-                                        //             child: Text(
-                                        //               FileManager.basename(
-                                        //                       entity)
-                                        //                   .substring(0, 1),
-                                        //               style: const TextStyle(
-                                        //                   color: Colors.white,
-                                        //                   fontSize: 33),
-                                        //             ),
-                                        //           )
-                                        //         : ClipRRect(
-                                        //             borderRadius:
-                                        //                 BorderRadius.circular(
-                                        //                     30),
-                                        //             child: Image.memory(ref
-                                        //                 .watch(playProvider)
-                                        //                 .artworks[index]),
-                                        //           );
-                                        //   } else {
-                                        //     return Container();
-                                        //   }
-                                        // }),
-                                        )
+                                        ))
                                     : const SizedBox(
                                         height: 50,
                                         child: Icon(
@@ -203,7 +249,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                         ))),
                                 title: Text(FileManager.basename(entity)),
                                 subtitle: subtitle(entity),
-                                onTap: () async {
+                                onTap: () {
                                   if (FileManager.isDirectory(entity)) {
                                     controller.openDirectory(entity);
                                     getTitle();
@@ -242,6 +288,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           // tag: ref.read(playProvider).tag,
                           playProvider: playProvider,
                           entityProvider: entityProvider,
+                          favoriteProvider: favoriteProvider,
                         ),
                       );
                     },
@@ -275,8 +322,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     )
                                   : ClipRRect(
                                       borderRadius: BorderRadius.circular(30),
-                                      child: Image.memory(
-                                          ref.read(playProvider).artwork!),
+                                      child: Hero(
+                                        tag: ref
+                                            .watch(playProvider)
+                                            .artwork
+                                            .toString(),
+                                        child: Image.memory(
+                                            ref.read(playProvider).artwork!),
+                                      ),
                                     );
                             }),
                           ),
@@ -343,7 +396,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     } else {
                                       myProvider.play(
                                           entity:
-                                              ref.read(entityProvider).entity);
+                                              ref.read(entityProvider).entity,
+                                          next: forward,
+                                          prev: rewind);
+                                      ref.read(playProvider).setTotalDuration();
                                     }
                                   },
                                   icon: Icon(
@@ -394,17 +450,22 @@ class _HomePageState extends ConsumerState<HomePage> {
     myPlay(index, playlist[index], playlist);
   }
 
-  void myPlay(int index, FileSystemEntity entity, List entities) async {
-    _handleLocalChanged();
+  void myPlay(int index, FileSystemEntity entity, List entities,
+      [bool playMusic = true]) async {
+    _refreshKey = UniqueKey();
     FileSystemEntity? currentEntity = ref.read(entityProvider).entity;
     if (currentEntity != entity) {
       ref.read(entityProvider).setEntity(entity);
-      ref.read(playProvider).retrieveMetadata(entity);
+      await ref.read(playProvider).retrieveMetadata(entity);
       ref.read(playProvider).setPlaylist(entities);
       ref.read(playProvider).setPIndex(index);
     }
-    await ref.read(playProvider).play(entity: entity);
-    ref.read(playProvider).setTotalDuration();
+    if (playMusic) {
+      await ref
+          .read(playProvider)
+          .play(entity: entity, next: forward, prev: rewind);
+      await ref.read(playProvider).setTotalDuration();
+    }
   }
 
   Widget subtitle(FileSystemEntity entity) {
@@ -503,5 +564,15 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
       ),
     );
+  }
+
+  navigateToFavorites(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (builder) {
+      return Favorite(
+        playProvider: playProvider,
+        entityProvider: entityProvider,
+        favoriteProvider: favoriteProvider,
+      );
+    }));
   }
 }
