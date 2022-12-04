@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:audiotagger/audiotagger.dart';
 import 'package:file_manager/file_manager.dart';
 import 'package:flutter/material.dart';
@@ -67,6 +66,13 @@ class _HomePageState extends ConsumerState<HomePage> {
               return File(e);
             }).toList()
           : [];
+
+      if (prefs.getStringList("favorites") != null) {
+        List favorites = prefs.getStringList("favorites")!;
+        favorites.forEach((e) {
+          ref.read(favoriteProvider).add(File(e));
+        });
+      }
       int index = prefs.getInt("pIndex") ?? 0;
       // print(
       // "indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx: " +

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FavoriveProvider extends ChangeNotifier {
   List _favorites = [];
@@ -16,13 +17,25 @@ class FavoriveProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  add(FileSystemEntity entity) {
+  add(FileSystemEntity entity) async {
+    final prefs = await SharedPreferences.getInstance();
     _favorites.add(entity);
     checkFavorite(entity);
+    prefs.setStringList(
+        "favorites",
+        _favorites.map((element) {
+          return element.path.toString();
+        }).toList());
   }
 
-  remove(FileSystemEntity entity) {
+  remove(FileSystemEntity entity) async{
+    final prefs = await SharedPreferences.getInstance();
     _favorites.remove(entity);
     checkFavorite(entity);
+    prefs.setStringList(
+        "favorites",
+        _favorites.map((element) {
+          return element.path.toString();
+        }).toList());
   }
 }
