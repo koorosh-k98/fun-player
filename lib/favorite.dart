@@ -102,8 +102,15 @@ class _FavoriteState extends ConsumerState<Favorite> {
                           var audioEntities = entities
                               .where((e) =>
                                   !FileManager.isDirectory(e) &&
-                                  (FileManager.getFileExtension(e) == "mp3" ||
-                                      FileManager.getFileExtension(e) == "m4a"))
+                                  (FileManager.getFileExtension(e)
+                                              .toLowerCase() ==
+                                          "mp3" ||
+                                      FileManager.getFileExtension(entity)
+                                              .toLowerCase() ==
+                                          "m4a" ||
+                                      FileManager.getFileExtension(e)
+                                              .toLowerCase() ==
+                                          "wav"))
                               .toList();
                           index = audioEntities.indexOf(entity);
                           myPlay(index, entity, audioEntities);

@@ -61,18 +61,24 @@ class PlayMusicProvider extends ChangeNotifier {
 
   increaseSpeed() {
     if (_speed <= 5.9) {
-      _speed += 0.2;
+      _speed += 0.1;
       _assetsAudioPlayer.setPlaySpeed(_speed);
       notifyListeners();
     }
   }
 
   decreaseSpeed() {
-    if (_speed >= 0.3) {
-      _speed -= 0.2;
+    if (_speed >= 0.2) {
+      _speed -= 0.1;
       _assetsAudioPlayer.setPlaySpeed(_speed);
       notifyListeners();
     }
+  }
+
+  resetSpeed() {
+    _speed = 1.0;
+    _assetsAudioPlayer.setPlaySpeed(_speed);
+    notifyListeners();
   }
 
   play(
@@ -83,14 +89,10 @@ class PlayMusicProvider extends ChangeNotifier {
       _assetsAudioPlayer.play();
     } else {
       classEntity = entity;
-      // final tagger = Audiotagger();
-      // Uint8List? artwork = await tagger.readArtwork(path: entity!.path);
-
-      // print("imgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg: "+img.toString());
       Metas metas = Metas(
         title: _tag?.title != "" ? _tag?.title : FileManager.basename(entity),
         artist: _tag?.artist ?? "Unknown artist",
-        // image: MetasImage.file(artwork.toString()),
+        image: MetasImage.file(artwork.toString()),
       );
       _assetsAudioPlayer.open(
         Audio.file(entity!.path, metas: metas),
@@ -156,7 +158,7 @@ class PlayMusicProvider extends ChangeNotifier {
   retrieveMetadata(entity) async {
     _artwork = null;
 
-    if (FileManager.getFileExtension(entity) == "mp3") {
+    if (FileManager.getFileExtension(entity).toLowerCase() == "mp3") {
       final tagger = Audiotagger();
       _tag = await tagger.readTags(path: entity.path);
       _artwork = await tagger.readArtwork(path: entity.path);
@@ -168,7 +170,8 @@ class PlayMusicProvider extends ChangeNotifier {
     _artworks = List.generate(entities.length, (index) => null);
     final tagger = Audiotagger();
     for (var e in entities) {
-      if (FileManager.isFile(e) && FileManager.getFileExtension(e) == "mp3") {
+      if (FileManager.isFile(e) &&
+          (FileManager.getFileExtension(e).toLowerCase() == "mp3")) {
         var artwork = await tagger.readArtwork(path: e.path);
         _artworks.insert(entities.indexOf(e), artwork);
         notifyListeners();

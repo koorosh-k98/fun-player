@@ -204,8 +204,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                       entities = snapshot
                           .where((e) =>
                               (FileManager.isDirectory(e) ||
-                                  FileManager.getFileExtension(e) == "mp3") ||
-                              FileManager.getFileExtension(e) == "m4a")
+                                  FileManager.getFileExtension(e)
+                                          .toLowerCase() ==
+                                      "mp3") ||
+                              FileManager.getFileExtension(e).toLowerCase() ==
+                                  "m4a" ||
+                              FileManager.getFileExtension(e).toLowerCase() ==
+                                  "wav")
                           .toList();
                       return ListView.builder(
                         itemCount: entities.length,
@@ -263,11 +268,15 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     var audioEntities = entities
                                         .where((e) =>
                                             !FileManager.isDirectory(e) &&
-                                            (FileManager.getFileExtension(e) ==
+                                            (FileManager.getFileExtension(e)
+                                                        .toLowerCase() ==
                                                     "mp3" ||
-                                                FileManager.getFileExtension(
-                                                        e) ==
-                                                    "m4a"))
+                                                FileManager.getFileExtension(e)
+                                                        .toLowerCase() ==
+                                                    "m4a" ||
+                                                FileManager.getFileExtension(e)
+                                                        .toLowerCase() ==
+                                                    "wav"))
                                         .toList();
                                     index = audioEntities.indexOf(entity);
                                     myPlay(index, entity, audioEntities);

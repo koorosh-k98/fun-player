@@ -179,11 +179,16 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
                                     color: ref.read(colorProvider).textColor,
                                     size: 30,
                                   )),
-                              Text(
-                                "${ref.watch(widget.playProvider).speed.toStringAsPrecision(ref.watch(widget.playProvider).speed >= 1 ? 2 : 1)}x",
-                                style: TextStyle(
-                                    color: ref.read(colorProvider).textColor,
-                                    fontSize: 20),
+                              GestureDetector(
+                                onTap: (){
+                                  ref.read(widget.playProvider).resetSpeed();
+                                },
+                                child: Text(
+                                  "${ref.watch(widget.playProvider).speed.toStringAsPrecision(ref.watch(widget.playProvider).speed >= 1 ? 2 : 1)}x",
+                                  style: TextStyle(
+                                      color: ref.read(colorProvider).textColor,
+                                      fontSize: 20),
+                                ),
                               ),
                               IconButton(
                                   onPressed: () {
