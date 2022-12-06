@@ -28,7 +28,7 @@ class FavoriveProvider extends ChangeNotifier {
         }).toList());
   }
 
-  remove(FileSystemEntity entity) async{
+  remove(FileSystemEntity entity) async {
     final prefs = await SharedPreferences.getInstance();
     _favorites.remove(entity);
     checkFavorite(entity);
