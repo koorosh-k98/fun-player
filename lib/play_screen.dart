@@ -9,15 +9,12 @@ import 'package:player/color_provider.dart';
 
 class PlayScreen extends ConsumerStatefulWidget {
   PlayScreen(
-      {
-      // required this.artwork,
-      required this.playProvider,
+      {required this.playProvider,
       required this.entityProvider,
       required this.favoriteProvider,
       Key? key})
       : super(key: key);
 
-  // final artwork;
   final playProvider;
   final entityProvider;
   final favoriteProvider;
@@ -51,7 +48,6 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
       ref
           .read(widget.favoriteProvider)
           .checkFavorite(ref.read(widget.entityProvider).entity);
-      // addListenerToPosition();
     });
   }
 
@@ -78,29 +74,6 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
     super.dispose();
   }
 
-  // addListenerToPosition() {
-  //   refPlayProvider.assetsAudioPlayer.currentPosition.listen((event) async {
-  //     print("hi");
-  //     refPlayProvider.setCurrentDuration();
-  //     double total =
-  //         double.parse(refPlayProvider.totalDuration.inMilliseconds.toString());
-  //     if (total != 0) value = event.inSeconds / total * 100000;
-  //     if (event.inMilliseconds >= total - 500) {
-  //       List playlist = refPlayProvider.playlist;
-  //       int index = refPlayProvider.pIndex;
-  //       if (playlist.length - 1 == index) {
-  //         refPlayProvider.pause();
-  //         refPlayProvider.seek(0.0);
-  //       } else {
-  //         if (index < playlist.length - 1) {
-  //           index++;
-  //         }
-  //         myPlay(index, playlist[index], playlist);
-  //       }
-  //     }
-  //   });
-  // }
-
   @override
   Widget build(BuildContext context) {
     double w = MediaQuery.of(context).size.width;
@@ -125,10 +98,11 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
                 child: Marquee(
                   key: _refreshKey,
                   startPadding: 50,
-                  text: (ref.read(widget.playProvider).tag.title != ""
+                  text: (ref.read(widget.playProvider).tag.title != null &&
+                          ref.read(widget.playProvider).tag.title != "")
                       ? ref.read(widget.playProvider).tag.title
                       : FileManager.basename(
-                          ref.read(widget.entityProvider).entity))!,
+                          ref.read(widget.entityProvider).entity ?? "Unknown"),
                   style: TextStyle(
                     fontSize: 25,
                     color: ref.watch(colorProvider).textColor,
@@ -180,7 +154,7 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
                                     size: 30,
                                   )),
                               GestureDetector(
-                                onTap: (){
+                                onTap: () {
                                   ref.read(widget.playProvider).resetSpeed();
                                 },
                                 child: Text(
@@ -211,17 +185,24 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
                                   onPressed: () {
                                     animationController!.reset();
                                     animationController!.forward();
-                                    ref.watch(widget.favoriteProvider).isFavorite
-                                        ? ref.read(widget.favoriteProvider).remove(
-                                        ref.read(widget.entityProvider).entity)
+                                    ref
+                                            .watch(widget.favoriteProvider)
+                                            .isFavorite
+                                        ? ref
+                                            .read(widget.favoriteProvider)
+                                            .remove(ref
+                                                .read(widget.entityProvider)
+                                                .entity)
                                         : ref.read(widget.favoriteProvider).add(
-                                        ref.read(widget.entityProvider).entity);
+                                            ref
+                                                .read(widget.entityProvider)
+                                                .entity);
                                   },
                                   icon: Icon(
                                     Icons.favorite,
                                     color: ref
-                                        .watch(widget.favoriteProvider)
-                                        .isFavorite
+                                            .watch(widget.favoriteProvider)
+                                            .isFavorite
                                         ? Colors.red
                                         : ref.read(colorProvider).textColor,
                                     size: sizeAnimation!.value,
@@ -238,10 +219,8 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
                       thumbColor: Colors.blueGrey,
                       activeColor: ref.watch(colorProvider).textColor,
                       onChanged: (val) {
-                        // setState(() {
                         value = val;
                         ref.read(widget.playProvider).seek(value);
-                        // });
                       },
                     ),
                     Padding(

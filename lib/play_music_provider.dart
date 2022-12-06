@@ -21,19 +21,11 @@ class PlayMusicProvider extends ChangeNotifier {
 
   Uint8List? _artwork;
 
-  List _artworks = [];
-
-  // int _length = 0;
-
   Tag? _tag;
 
   Tag? get tag => _tag;
 
   Uint8List? get artwork => _artwork;
-
-  List get artworks => _artworks;
-
-  // int get length => _length;
 
   List _playList = [];
 
@@ -166,19 +158,6 @@ class PlayMusicProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  retrieveArtworks(List entities) async {
-    _artworks = List.generate(entities.length, (index) => null);
-    final tagger = Audiotagger();
-    for (var e in entities) {
-      if (FileManager.isFile(e) &&
-          (FileManager.getFileExtension(e).toLowerCase() == "mp3")) {
-        var artwork = await tagger.readArtwork(path: e.path);
-        _artworks.insert(entities.indexOf(e), artwork);
-        notifyListeners();
-      }
-    }
-  }
-
   setPlaylist(List entities) async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setStringList(
@@ -196,15 +175,4 @@ class PlayMusicProvider extends ChangeNotifier {
     _pIndex = index;
     notifyListeners();
   }
-
-// setLength(int length) {
-//   _length = length;
-//   notifyListeners();
-// }
-
-// @override
-// void dispose() {
-//   super.dispose();
-//   // _assetsAudioPlayer.dispose();
-// }
 }

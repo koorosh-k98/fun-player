@@ -56,13 +56,10 @@ class _HomePageState extends ConsumerState<HomePage> {
       Future.delayed(const Duration(milliseconds: 500), () {
         controller.openDirectory(File(prefs.getString("entity")!).parent);
         getTitle();
-        // print("curenttttttttttttttttttttttttttttttttttttt: " +
-        //     controller.getCurrentPath);
       });
       ref.read(entityProvider).setEntity(File(prefs.getString("entity") ?? ""));
       List playlist = prefs.getStringList("entities") != null
           ? prefs.getStringList("entities")!.map((e) {
-              // print(e);
               return File(e);
             }).toList()
           : [];
@@ -74,12 +71,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         });
       }
       int index = prefs.getInt("pIndex") ?? 0;
-      // print(
-      // "indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx: " +
-      //     pIndex.toString());
-      // print(
-      //     "playlistttttttttttttttttttttttttttttttttttttttttttttttttttttttt: " +
-      //         playlist.toString());
       myPlay(index, playlist[index], playlist, false);
     }
   }
@@ -87,9 +78,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   //to pause when another application is playing a song
   addPauseListener() {
     ref.read(playProvider).assetsAudioPlayer.playerState.listen((event) {
-      // print(
-      //     "Stateeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee: " +
-      //         event.toString());
       if (event.toString() == "PlayerState.pause") {
         ref.read(playProvider).pausePlaying();
       }
@@ -105,22 +93,14 @@ class _HomePageState extends ConsumerState<HomePage> {
         .assetsAudioPlayer
         .currentPosition
         .listen((event) async {
-      // print(
-      //     "Eenttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt: ${event.inMilliseconds}");
       ref.read(playProvider).setCurrentDuration();
       ref.read(playProvider).setSliderValue(event);
       double total = double.parse(
           ref.read(playProvider).totalDuration.inMilliseconds.toString());
-      // print(
-      //     "Totallllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll: $total");
       if (total != 0 && event.inMilliseconds >= total - 500) {
         List playlist = ref.read(playProvider).playlist;
-        // print(
-        //     "lengthhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh: ${playlist.length}");
         if (playlist.isNotEmpty) {
           int index = ref.read(playProvider).pIndex;
-          // print(
-          //     "indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx: $index");
           if (playlist.length - 1 == index) {
             ref.read(playProvider).pause();
             ref.read(playProvider).seek(0.0);
@@ -151,7 +131,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     action: SnackBarAction(
         label: 'OK',
         onPressed: () {
-          //to dismiss the Snackbar I deliberately left it empty
+          //to dismiss the SnackBar I deliberately left it empty
         }),
   );
 
@@ -236,9 +216,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                                 child: Image.memory(
                                                     snapshot.data!),
                                               );
-                                            } else if (snapshot.hasError) {
-                                              print("error: ${snapshot.error}");
-                                            } else {
+                                            } else if (!snapshot.hasError) {
                                               return Center(
                                                 child: Text(
                                                   FileManager.basename(entity)
@@ -298,9 +276,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                         isDismissible: false,
                         context: context,
                         builder: (context) => PlayScreen(
-                          // entity: ref.read(entityProvider).entity,
-                          // artwork: ref.read(playProvider).artwork,
-                          // tag: ref.read(playProvider).tag,
                           playProvider: playProvider,
                           entityProvider: entityProvider,
                           favoriteProvider: favoriteProvider,

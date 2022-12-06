@@ -71,9 +71,7 @@ class _FavoriteState extends ConsumerState<Favorite> {
                                   borderRadius: BorderRadius.circular(30),
                                   child: Image.memory(snapshot.data!),
                                 );
-                              } else if (snapshot.hasError) {
-                                print("error: ${snapshot.error}");
-                              } else {
+                              } else if (!snapshot.hasError) {
                                 return Center(
                                   child: Text(
                                     FileManager.basename(entity)
@@ -129,9 +127,6 @@ class _FavoriteState extends ConsumerState<Favorite> {
                     isDismissible: false,
                     context: context,
                     builder: (context) => PlayScreen(
-                      // entity: ref.read(entityProvider).entity,
-                      // artwork: ref.read(playProvider).artwork,
-                      // tag: ref.read(playProvider).tag,
                       playProvider: widget.playProvider,
                       entityProvider: widget.entityProvider,
                       favoriteProvider: widget.favoriteProvider,
