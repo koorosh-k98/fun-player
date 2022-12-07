@@ -8,7 +8,7 @@
     <application
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:label="player"
+        android:label="Fun Player"
         android:requestLegacyExternalStorage="true">
         <activity
             android:name=".MainActivity"
