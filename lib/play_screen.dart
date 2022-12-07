@@ -98,7 +98,7 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
                 child: Marquee(
                   key: _refreshKey,
                   startPadding: 50,
-                  text: (ref.read(widget.playProvider).tag.title != null &&
+                  text: (ref.read(widget.playProvider).tag != null &&
                           ref.read(widget.playProvider).tag.title != "")
                       ? ref.read(widget.playProvider).tag.title
                       : FileManager.basename(
@@ -119,7 +119,10 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
                 width: w,
                 height: 80,
                 child: Text(
-                  ref.read(widget.playProvider).tag.artist ?? "Unknown artist",
+                  (ref.read(widget.playProvider).tag != null &&
+                          ref.read(widget.playProvider).tag?.artist != "")
+                      ? ref.read(widget.playProvider).tag?.artist
+                      : "Unknown artist",
                   maxLines: 2,
                   textAlign: TextAlign.center,
                   style: TextStyle(

@@ -351,9 +351,17 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   height: 25,
                                   width: w,
                                   child: Consumer(builder: (context, ref, _) {
+                                    String? artist =
+                                        (ref.read(playProvider).tag != null &&
+                                                ref
+                                                        .read(playProvider)
+                                                        .tag
+                                                        ?.artist !=
+                                                    "")
+                                            ? ref.read(playProvider).tag?.artist
+                                            : "Unknown artist";
                                     return Text(
-                                      ref.watch(playProvider).tag?.artist ??
-                                          "Unknown artist",
+                                      artist ?? "Unknown artist",
                                       style: const TextStyle(
                                           fontSize: 15, color: Colors.white),
                                       overflow: TextOverflow.ellipsis,

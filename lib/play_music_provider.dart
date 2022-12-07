@@ -82,8 +82,12 @@ class PlayMusicProvider extends ChangeNotifier {
     } else {
       classEntity = entity;
       Metas metas = Metas(
-        title: _tag?.title != "" ? _tag?.title : FileManager.basename(entity),
-        artist: _tag?.artist ?? "Unknown artist",
+        title: (_tag != null && _tag?.title != "")
+            ? _tag?.title
+            : FileManager.basename(entity),
+        artist: (_tag != null && _tag?.artist != "")
+            ? _tag?.artist
+            : "Unknown artist",
         image: MetasImage.file(artwork.toString()),
       );
       _assetsAudioPlayer.open(
@@ -140,7 +144,6 @@ class PlayMusicProvider extends ChangeNotifier {
   seek(double to) {
     double position = to / 100 * totalDuration.inSeconds;
     _assetsAudioPlayer.seek(Duration(seconds: position.round()));
-    // setCurrentDuration();
   }
 
   seekBy(duration) {
@@ -148,6 +151,7 @@ class PlayMusicProvider extends ChangeNotifier {
   }
 
   retrieveMetadata(entity) async {
+    _tag = null;
     _artwork = null;
 
     if (FileManager.getFileExtension(entity).toLowerCase() == "mp3") {
