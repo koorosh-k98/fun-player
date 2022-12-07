@@ -82,13 +82,13 @@ class PlayMusicProvider extends ChangeNotifier {
     } else {
       classEntity = entity;
       Metas metas = Metas(
-        title: (_tag != null && _tag?.title != "")
-            ? _tag?.title
+        title: (tag != null && tag?.title != "")
+            ? tag?.title
             : FileManager.basename(entity),
-        artist: (_tag != null && _tag?.artist != "")
-            ? _tag?.artist
+        artist: (tag != null && tag?.artist != "")
+            ? tag?.artist
             : "Unknown artist",
-        image: MetasImage.file(artwork.toString()),
+        // image: MetasImage.file(artwork.toString()),
       );
       _assetsAudioPlayer.open(
         Audio.file(entity!.path, metas: metas),
