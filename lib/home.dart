@@ -93,6 +93,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         .assetsAudioPlayer
         .currentPosition
         .listen((event) async {
+
       ref.read(playProvider).setCurrentDuration();
       ref.read(playProvider).setSliderValue(event);
       double total = double.parse(
@@ -200,9 +201,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                             child: ListTile(
                                 leading: (FileManager.isFile(entity)
                                     ? Container(
-                                        decoration: const BoxDecoration(
+                                        decoration:  BoxDecoration(
                                             shape: BoxShape.circle,
-                                            color: Colors.blue),
+                                            color: Theme.of(context).colorScheme.secondary),
                                         width: 55,
                                         height: 55,
                                         child: FutureBuilder(
@@ -295,8 +296,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            decoration: const BoxDecoration(
-                                shape: BoxShape.circle, color: Colors.blue),
+                            decoration:  BoxDecoration(
+                                shape: BoxShape.circle, color: Theme.of(context).colorScheme.secondary),
                             width: 62,
                             height: 62,
                             child: Consumer(builder: (context, ref, _) {

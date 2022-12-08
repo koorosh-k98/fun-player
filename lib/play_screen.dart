@@ -35,8 +35,6 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
   AnimationController? animationController;
   Animation<double>? sizeAnimation;
 
-  double value = 0;
-
   Key _refreshKey = UniqueKey();
 
   @override
@@ -78,263 +76,247 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
   Widget build(BuildContext context) {
     double w = MediaQuery.of(context).size.width;
     return Scaffold(
-      body: Consumer(builder: (context, ref, _) {
-        return Container(
-          color: ref.watch(colorProvider).backgroundColor,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(
-                height: 10,
+        body: Container(
+      color: ref.watch(colorProvider).backgroundColor,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(
+            height: 10,
+          ),
+          artwork(width: w),
+          const SizedBox(
+            height: 25,
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 35),
+            height: 40,
+            child: Marquee(
+              key: _refreshKey,
+              startPadding: 50,
+              text: (ref.read(widget.playProvider).tag != null &&
+                      ref.read(widget.playProvider).tag.title != "")
+                  ? ref.read(widget.playProvider).tag.title
+                  : FileManager.basename(
+                      ref.read(widget.entityProvider).entity ?? "Unknown"),
+              style: TextStyle(
+                fontSize: 25,
+                color: ref.watch(colorProvider).textColor,
               ),
-              artwork(width: w),
-              const SizedBox(
-                height: 25,
+              blankSpace: w,
+              fadingEdgeStartFraction: 0.1,
+              fadingEdgeEndFraction: 0.1,
+            ),
+          ),
+          const SizedBox(
+            height: 30,
+          ),
+          SizedBox(
+            width: w,
+            height: 80,
+            child: Text(
+              (ref.read(widget.playProvider).tag != null &&
+                      ref.read(widget.playProvider).tag?.artist != "")
+                  ? ref.read(widget.playProvider).tag?.artist
+                  : "Unknown artist",
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 17,
+                color: ref.watch(colorProvider).textColor,
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 35),
-                height: 40,
-                child: Marquee(
-                  key: _refreshKey,
-                  startPadding: 50,
-                  text: (ref.read(widget.playProvider).tag != null &&
-                          ref.read(widget.playProvider).tag.title != "")
-                      ? ref.read(widget.playProvider).tag.title
-                      : FileManager.basename(
-                          ref.read(widget.entityProvider).entity ?? "Unknown"),
-                  style: TextStyle(
-                    fontSize: 25,
-                    color: ref.watch(colorProvider).textColor,
-                  ),
-                  blankSpace: w,
-                  fadingEdgeStartFraction: 0.1,
-                  fadingEdgeEndFraction: 0.1,
-                ),
-              ),
-              const SizedBox(
-                height: 30,
-              ),
-              SizedBox(
-                width: w,
-                height: 80,
-                child: Text(
-                  (ref.read(widget.playProvider).tag != null &&
-                          ref.read(widget.playProvider).tag?.artist != "")
-                      ? ref.read(widget.playProvider).tag?.artist
-                      : "Unknown artist",
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: ref.watch(colorProvider).textColor,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const Spacer(),
-              SizedBox(
-                width: double.infinity,
-                height: 250,
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const Spacer(),
+          SizedBox(
+            width: double.infinity,
+            height: 250,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              IconButton(
-                                  onPressed: () {
-                                    ref
-                                        .read(widget.playProvider)
-                                        .decreaseSpeed();
-                                  },
-                                  icon: Icon(
-                                    Icons.remove,
-                                    color: ref.read(colorProvider).textColor,
-                                    size: 30,
-                                  )),
-                              GestureDetector(
-                                onTap: () {
-                                  ref.read(widget.playProvider).resetSpeed();
-                                },
-                                child: Text(
-                                  "${ref.watch(widget.playProvider).speed.toStringAsPrecision(ref.watch(widget.playProvider).speed >= 1 ? 2 : 1)}x",
-                                  style: TextStyle(
-                                      color: ref.read(colorProvider).textColor,
-                                      fontSize: 20),
-                                ),
-                              ),
-                              IconButton(
-                                  onPressed: () {
-                                    ref
-                                        .read(widget.playProvider)
-                                        .increaseSpeed();
-                                  },
-                                  icon: Icon(
-                                    Icons.add,
-                                    color: ref.read(colorProvider).textColor,
-                                    size: 30,
-                                  ))
-                            ],
-                          ),
-                          AnimatedBuilder(
-                            animation: animationController!,
-                            builder: ((context, child) {
-                              return IconButton(
-                                  padding: EdgeInsets.zero,
-                                  onPressed: () {
-                                    animationController!.reset();
-                                    animationController!.forward();
-                                    ref
-                                            .watch(widget.favoriteProvider)
-                                            .isFavorite
-                                        ? ref
-                                            .read(widget.favoriteProvider)
-                                            .remove(ref
-                                                .read(widget.entityProvider)
-                                                .entity)
-                                        : ref.read(widget.favoriteProvider).add(
-                                            ref
-                                                .read(widget.entityProvider)
-                                                .entity);
-                                  },
-                                  icon: Icon(
-                                    Icons.favorite,
-                                    color: ref
-                                            .watch(widget.favoriteProvider)
-                                            .isFavorite
-                                        ? Colors.red
-                                        : ref.read(colorProvider).textColor,
-                                    size: sizeAnimation!.value,
-                                  ));
-                            }),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Slider(
-                      min: 0,
-                      max: 100,
-                      value: refPlayProvider.sliderValue,
-                      thumbColor: Colors.blueGrey,
-                      activeColor: ref.watch(colorProvider).textColor,
-                      onChanged: (val) {
-                        value = val;
-                        ref.read(widget.playProvider).seek(value);
-                      },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            intToTimeLeft(ref
-                                .watch(widget.playProvider)
-                                .currentDuration
-                                .inSeconds),
-                            style: TextStyle(
-                                color: ref.watch(colorProvider).textColor),
-                          ),
-                          Text(
-                            intToTimeLeft(ref
-                                .watch(widget.playProvider)
-                                .totalDuration
-                                .inSeconds),
-                            style: TextStyle(
-                                color: ref.watch(colorProvider).textColor),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: () => ref
-                              .read(widget.playProvider)
-                              .seekBy(const Duration(seconds: -5)),
-                          icon: Icon(
-                            Icons.replay_5_rounded,
-                            size: 50,
-                            color: ref.watch(colorProvider).textColor,
-                          ),
-                        ),
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: rewind,
-                          icon: Icon(
-                            Icons.skip_previous,
-                            size: 50,
-                            color: ref.watch(colorProvider).textColor,
-                          ),
-                        ),
-                        SizedBox(
-                          width: 80,
-                          height: 80,
-                          child: IconButton(
-                            padding: EdgeInsets.zero,
-                            onPressed: () {
-                              final myProvider = ref.read(widget.playProvider);
-
-                              if (myProvider.isPlaying) {
-                                myProvider.pause();
-                              } else {
-                                myProvider.play(
-                                    entity: refEntityProvider.entity,
-                                    next: forward,
-                                    prev: rewind);
-                                ref
-                                    .read(widget.playProvider)
-                                    .setTotalDuration();
-                              }
+                          IconButton(
+                              onPressed: () {
+                                ref.read(widget.playProvider).decreaseSpeed();
+                              },
+                              icon: Icon(
+                                Icons.remove,
+                                color: ref.read(colorProvider).textColor,
+                                size: 30,
+                              )),
+                          GestureDetector(
+                            onTap: () {
+                              ref.read(widget.playProvider).resetSpeed();
                             },
-                            icon: Icon(
-                              ref.watch(widget.playProvider).isPlaying
-                                  ? Icons.pause
-                                  : Icons.play_arrow,
-                              size: 70,
-                              color: ref.watch(colorProvider).textColor,
+                            child: Text(
+                              "${ref.watch(widget.playProvider).speed.toStringAsPrecision(ref.watch(widget.playProvider).speed >= 1 ? 2 : 1)}x",
+                              style: TextStyle(
+                                  color: ref.read(colorProvider).textColor,
+                                  fontSize: 20),
                             ),
                           ),
+                          IconButton(
+                              onPressed: () {
+                                ref.read(widget.playProvider).increaseSpeed();
+                              },
+                              icon: Icon(
+                                Icons.add,
+                                color: ref.read(colorProvider).textColor,
+                                size: 30,
+                              ))
+                        ],
+                      ),
+                      AnimatedBuilder(
+                        animation: animationController!,
+                        builder: ((context, child) {
+                          return IconButton(
+                              padding: EdgeInsets.zero,
+                              onPressed: () {
+                                animationController!.reset();
+                                animationController!.forward();
+                                ref.watch(widget.favoriteProvider).isFavorite
+                                    ? ref.read(widget.favoriteProvider).remove(
+                                        ref.read(widget.entityProvider).entity)
+                                    : ref.read(widget.favoriteProvider).add(
+                                        ref.read(widget.entityProvider).entity);
+                              },
+                              icon: Icon(
+                                Icons.favorite,
+                                color: ref
+                                        .watch(widget.favoriteProvider)
+                                        .isFavorite
+                                    ? Colors.red
+                                    : ref.read(colorProvider).textColor,
+                                size: sizeAnimation!.value,
+                              ));
+                        }),
+                      ),
+                    ],
+                  ),
+                ),
+                Slider(
+                  min: 0,
+                  max: 100,
+                  value: refPlayProvider.sliderValue,
+                  thumbColor: Colors.blueGrey,
+                  activeColor: ref.watch(colorProvider).textColor,
+                  inactiveColor: Colors.blueGrey,
+                  onChanged: (val) {
+                    ref.read(widget.playProvider).seek(val);
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        intToTimeLeft(ref
+                            .watch(widget.playProvider)
+                            .currentDuration
+                            .inSeconds),
+                        style: TextStyle(
+                            color: ref.watch(colorProvider).textColor),
+                      ),
+                      Text(
+                        intToTimeLeft(ref
+                            .watch(widget.playProvider)
+                            .totalDuration
+                            .inSeconds),
+                        style: TextStyle(
+                            color: ref.watch(colorProvider).textColor),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: () => ref
+                          .read(widget.playProvider)
+                          .seekBy(const Duration(seconds: -5)),
+                      icon: Icon(
+                        Icons.replay_5_rounded,
+                        size: 50,
+                        color: ref.watch(colorProvider).textColor,
+                      ),
+                    ),
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: rewind,
+                      icon: Icon(
+                        Icons.skip_previous,
+                        size: 50,
+                        color: ref.watch(colorProvider).textColor,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 80,
+                      height: 80,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        onPressed: () {
+                          final myProvider = ref.read(widget.playProvider);
+
+                          if (myProvider.isPlaying) {
+                            myProvider.pause();
+                          } else {
+                            myProvider.play(
+                                entity: refEntityProvider.entity,
+                                next: forward,
+                                prev: rewind);
+                            ref.read(widget.playProvider).setTotalDuration();
+                          }
+                        },
+                        icon: Icon(
+                          ref.watch(widget.playProvider).isPlaying
+                              ? Icons.pause
+                              : Icons.play_arrow,
+                          size: 70,
+                          color: ref.watch(colorProvider).textColor,
                         ),
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: forward,
-                          icon: Icon(
-                            Icons.skip_next,
-                            size: 50,
-                            color: ref.watch(colorProvider).textColor,
-                          ),
-                        ),
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: () => ref
-                              .read(widget.playProvider)
-                              .seekBy(const Duration(seconds: 5)),
-                          icon: Icon(
-                            Icons.forward_5_rounded,
-                            size: 50,
-                            color: ref.watch(colorProvider).textColor,
-                          ),
-                        ),
-                      ],
+                      ),
+                    ),
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: forward,
+                      icon: Icon(
+                        Icons.skip_next,
+                        size: 50,
+                        color: ref.watch(colorProvider).textColor,
+                      ),
+                    ),
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: () => ref
+                          .read(widget.playProvider)
+                          .seekBy(const Duration(seconds: 5)),
+                      icon: Icon(
+                        Icons.forward_5_rounded,
+                        size: 50,
+                        color: ref.watch(colorProvider).textColor,
+                      ),
                     ),
                   ],
                 ),
-              )
-            ],
-          ),
-        );
-      }),
-    );
+              ],
+            ),
+          )
+        ],
+      ),
+    ));
   }
 
   Widget artwork({width}) {

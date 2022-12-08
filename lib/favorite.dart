@@ -59,8 +59,8 @@ class _FavoriteState extends ConsumerState<Favorite> {
                   return Card(
                     child: ListTile(
                         leading: Container(
-                          decoration: const BoxDecoration(
-                              shape: BoxShape.circle, color: Colors.blue),
+                          decoration:  BoxDecoration(
+                              shape: BoxShape.circle, color: Theme.of(context).colorScheme.secondary),
                           width: 55,
                           height: 55,
                           child: FutureBuilder(
@@ -146,8 +146,8 @@ class _FavoriteState extends ConsumerState<Favorite> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        decoration: const BoxDecoration(
-                            shape: BoxShape.circle, color: Colors.blue),
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle, color: Theme.of(context).colorScheme.secondary),
                         width: 62,
                         height: 62,
                         child: Consumer(builder: (context, ref, _) {

@@ -85,9 +85,8 @@ class PlayMusicProvider extends ChangeNotifier {
         title: (tag != null && tag?.title != "")
             ? tag?.title
             : FileManager.basename(entity),
-        artist: (tag != null && tag?.artist != "")
-            ? tag?.artist
-            : "Unknown artist",
+        artist:
+            (tag != null && tag?.artist != "") ? tag?.artist : "Unknown artist",
         // image: MetasImage.file(artwork.toString()),
       );
       _assetsAudioPlayer.open(
@@ -131,7 +130,6 @@ class PlayMusicProvider extends ChangeNotifier {
   setCurrentDuration() {
     _currentDuration = _assetsAudioPlayer.currentPosition.valueOrNull ??
         const Duration(seconds: 0);
-
     notifyListeners();
   }
 

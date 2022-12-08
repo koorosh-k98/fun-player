@@ -4,7 +4,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:player/home.dart';
 import 'package:player/permission.dart';
 
-import 'favorite.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +21,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        primarySwatch: Colors.purple,
+        accentColor: Colors.amber
+      ),
       initialRoute: initialRoute,
       routes: {
         HomePage.id: (context) => const HomePage(),
