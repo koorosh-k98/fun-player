@@ -10,6 +10,7 @@ import 'package:player/play_music_provider.dart';
 import 'package:player/play_screen.dart';
 import 'package:player/title_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'entity_provider.dart';
 import 'favorite.dart';
 import 'favorite_provider.dart';
@@ -93,7 +94,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         .assetsAudioPlayer
         .currentPosition
         .listen((event) async {
-
       ref.read(playProvider).setCurrentDuration();
       ref.read(playProvider).setSliderValue(event);
       double total = double.parse(
@@ -201,9 +201,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                             child: ListTile(
                                 leading: (FileManager.isFile(entity)
                                     ? Container(
-                                        decoration:  BoxDecoration(
+                                        decoration: BoxDecoration(
                                             shape: BoxShape.circle,
-                                            color: Theme.of(context).colorScheme.secondary),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary),
                                         width: 55,
                                         height: 55,
                                         child: FutureBuilder(
@@ -296,8 +298,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            decoration:  BoxDecoration(
-                                shape: BoxShape.circle, color: Theme.of(context).colorScheme.secondary),
+                            decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Theme.of(context).colorScheme.secondary),
                             width: 62,
                             height: 62,
                             child: Consumer(builder: (context, ref, _) {
@@ -387,20 +390,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   )),
                               IconButton(
                                   padding: EdgeInsets.zero,
-                                  onPressed: () {
-                                    final myProvider = ref.read(playProvider);
-
-                                    if (myProvider.isPlaying) {
-                                      myProvider.pause();
-                                    } else {
-                                      myProvider.play(
-                                          entity:
-                                              ref.read(entityProvider).entity,
-                                          next: forward,
-                                          prev: rewind);
-                                      ref.read(playProvider).setTotalDuration();
-                                    }
-                                  },
+                                  onPressed: onPressedPlayButton,
                                   icon: Icon(
                                     ref.watch(playProvider).isPlaying
                                         ? Icons.pause
@@ -573,5 +563,17 @@ class _HomePageState extends ConsumerState<HomePage> {
         favoriteProvider: favoriteProvider,
       );
     }));
+  }
+
+  onPressedPlayButton() {
+    final myProvider = ref.read(playProvider);
+
+    if (myProvider.isPlaying) {
+      myProvider.pause();
+    } else {
+      myProvider.play(
+          entity: ref.read(entityProvider).entity, next: forward, prev: rewind);
+      ref.read(playProvider).setTotalDuration();
+    }
   }
 }

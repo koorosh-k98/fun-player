@@ -120,7 +120,7 @@ class PlayMusicProvider extends ChangeNotifier {
   }
 
   setTotalDuration() {
-    Future.delayed(const Duration(milliseconds: 500), () {
+    Future.delayed(const Duration(milliseconds: 300), () {
       _totalDuration = _assetsAudioPlayer.current.valueOrNull?.audio.duration ??
           const Duration(seconds: 0);
       notifyListeners();
