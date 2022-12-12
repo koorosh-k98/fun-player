@@ -30,6 +30,7 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
   late var refPlayProvider;
   late var refEntityProvider;
   late var refColorProvider;
+  late var refFavoriteProvider;
   double speed = 1.0;
 
   AnimationController? animationController;
@@ -63,6 +64,7 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
     refPlayProvider = ref.read(widget.playProvider);
     refEntityProvider = ref.read(widget.entityProvider);
     refColorProvider = ref.read(colorProvider);
+    refFavoriteProvider = ref.read(widget.favoriteProvider);
     super.didChangeDependencies();
   }
 
@@ -394,7 +396,7 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
       await refPlayProvider.retrieveMetadata(entity);
       refPlayProvider.setPlaylist(entities);
       refPlayProvider.setPIndex(index);
-      await ref.read(widget.favoriteProvider).checkFavorite(entity);
+      await refFavoriteProvider.checkFavorite(entity);
       setColor();
     }
     await refPlayProvider.play(entity: entity, next: forward, prev: rewind);

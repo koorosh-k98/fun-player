@@ -1,19 +1,24 @@
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:audiotagger/audiotagger.dart';
 import 'package:audiotagger/models/tag.dart';
 import 'package:file_manager/file_manager.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PlayMusicProvider extends ChangeNotifier {
+  final _assetsAudioPlayer = AssetsAudioPlayer();
+
+  final tagger = Audiotagger();
+
   bool _isPlaying = false;
 
   bool get isPlaying => _isPlaying;
-
-  final _assetsAudioPlayer = AssetsAudioPlayer();
 
   get assetsAudioPlayer => _assetsAudioPlayer;
 
@@ -148,18 +153,6 @@ class PlayMusicProvider extends ChangeNotifier {
     _assetsAudioPlayer.seekBy(duration);
   }
 
-  retrieveMetadata(entity) async {
-    _tag = null;
-    _artwork = null;
-
-    if (FileManager.getFileExtension(entity).toLowerCase() == "mp3") {
-      final tagger = Audiotagger();
-      _tag = await tagger.readTags(path: entity.path);
-      _artwork = await tagger.readArtwork(path: entity.path);
-    }
-    notifyListeners();
-  }
-
   setPlaylist(List entities) async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setStringList(
@@ -177,4 +170,46 @@ class PlayMusicProvider extends ChangeNotifier {
     _pIndex = index;
     notifyListeners();
   }
+
+  retrieveMetadata(entity) async {
+    _tag = null;
+    _artwork = null;
+    if (FileManager.getFileExtension(entity).toLowerCase() == "mp3") {
+      _tag = await tagger.readTags(path: entity.path);
+      // _tag = await retrieveMetaTags(entity);
+      _artwork = await retrieveArtwork(entity);
+    }
+    notifyListeners();
+  }
+
+  Future<Uint8List?> retrieveArtwork(entity) async {
+    return await tagger.readArtwork(path: entity.path);
+  }
 }
+
+// Future<Tag?> retrieveMetaTags(entity) async {
+//   ReceivePort mainReceivePort = ReceivePort();
+//   Isolate.spawn(metaTagIsolate, mainReceivePort.sendPort);
+//   SendPort isolateSendPort = await mainReceivePort.first;
+//
+//   ReceivePort responsePort = ReceivePort();
+//   isolateSendPort.send([entity, responsePort.sendPort]);
+//   return await responsePort.first;
+// }
+
+// metaTagIsolate(SendPort mainSendPort) async {
+//   ReceivePort isolateReceivePort = ReceivePort();
+//   mainSendPort.send(isolateReceivePort.sendPort);
+//
+//   await for (var message in isolateReceivePort) {
+//     FileSystemEntity entity = message[0];
+//     SendPort replyPort = message[1];
+//     // final tagger = Audiotagger();
+//     // Tag? result = await tagger.readTags(path: entity.path);
+//     final metadata = await MetadataRetriever.fromFile(File(entity.path));
+//     Tag result = Tag(
+//         title: metadata.trackName,
+//         artist: metadata.trackArtistNames?[0] ?? "Unknown");
+//     replyPort.send(result);
+//   }
+// }

@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:audiotagger/audiotagger.dart';
 import 'package:file_manager/file_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,7 +35,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   final entityProvider = ChangeNotifierProvider((_) => EntityProvider());
   final favoriteProvider = ChangeNotifierProvider((ref) => FavoriveProvider());
   final titleProvider = ChangeNotifierProvider((_) => TitleProvider());
-  final tagger = Audiotagger();
 
   Key _refreshKey = UniqueKey();
 
@@ -209,8 +207,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                         width: 55,
                                         height: 55,
                                         child: FutureBuilder(
-                                          future: tagger.readArtwork(
-                                              path: entity.path),
+                                          future: ref.read(playProvider).retrieveArtwork(entity),
                                           builder: (context, snapshot) {
                                             if (snapshot.hasData) {
                                               return ClipRRect(

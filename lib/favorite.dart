@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:audiotagger/audiotagger.dart';
 import 'package:file_manager/file_manager.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
@@ -25,7 +25,6 @@ class Favorite extends ConsumerStatefulWidget {
 }
 
 class _FavoriteState extends ConsumerState<Favorite> {
-  final tagger = Audiotagger();
   Key _refreshKey = UniqueKey();
 
   @override
@@ -64,12 +63,12 @@ class _FavoriteState extends ConsumerState<Favorite> {
                           width: 55,
                           height: 55,
                           child: FutureBuilder(
-                            future: tagger.readArtwork(path: entity.path),
+                            future: ref.read(widget.playProvider).retrieveArtwork(entity),
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
                                 return ClipRRect(
                                   borderRadius: BorderRadius.circular(30),
-                                  child: Image.memory(snapshot.data!),
+                                  child: Image.memory(snapshot.data! as Uint8List),
                                 );
                               } else if (!snapshot.hasError) {
                                 return Center(
