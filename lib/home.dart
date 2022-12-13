@@ -125,15 +125,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     ref.read(titleProvider).setTitle = title;
   }
 
-  final snackBar = SnackBar(
-    content: const Text('Unsupported file'),
-    action: SnackBarAction(
-        label: 'OK',
-        onPressed: () {
-          //to dismiss the SnackBar I deliberately left it empty
-        }),
-  );
-
   @override
   Widget build(BuildContext context) {
     double w = MediaQuery.of(context).size.width * 0.35;
