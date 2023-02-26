@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:player/home.dart';
+import 'package:player/screens/home.dart';
 
 class PermissionHandle extends StatefulWidget {
   static const id = 'permission_screen';
@@ -28,6 +28,7 @@ class _PermissionHandleState extends State<PermissionHandle>
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
       var status = await Permission.storage.status;
+      print(status.toString());
       if (status.isGranted) {
         Navigator.of(context).push(MaterialPageRoute(builder: (ctx) {
           return const HomePage();

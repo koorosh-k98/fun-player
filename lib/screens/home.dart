@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
-import 'package:player/play_music_provider.dart';
-import 'package:player/play_screen.dart';
-import 'package:player/title_provider.dart';
+import 'package:player/providers/play_music_provider.dart';
+import 'package:player/screens/play_screen.dart';
+import 'package:player/providers/title_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'entity_provider.dart';
+import '../providers/entity_provider.dart';
+import '../providers/favorite_provider.dart';
 import 'favorite.dart';
-import 'favorite_provider.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   static const id = 'home_screen';

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:assets_audio_player/assets_audio_player.dart';
@@ -8,7 +7,6 @@ import 'package:audiotagger/models/tag.dart';
 import 'package:file_manager/file_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PlayMusicProvider extends ChangeNotifier {

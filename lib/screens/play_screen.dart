@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:marquee/marquee.dart';
 import 'package:palette_generator/palette_generator.dart';
-import 'package:player/color_provider.dart';
+import 'package:player/providers/color_provider.dart';
 
 class PlayScreen extends ConsumerStatefulWidget {
   PlayScreen(
@@ -98,8 +98,9 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
               key: _refreshKey,
               startPadding: 50,
               text: (ref.read(widget.playProvider).tag != null &&
-                      ref.read(widget.playProvider).tag.title != "")
-                  ? ref.read(widget.playProvider).tag.title
+                      ref.read(widget.playProvider).tag!.title != "" &&
+                      ref.read(widget.playProvider).tag!.title != null)
+                  ? ref.read(widget.playProvider).tag!.title
                   : FileManager.basename(
                       ref.read(widget.entityProvider).entity ?? "Unknown"),
               style: TextStyle(
@@ -119,7 +120,8 @@ class _PlayScreenState extends ConsumerState<PlayScreen>
             height: 80,
             child: Text(
               (ref.read(widget.playProvider).tag != null &&
-                      ref.read(widget.playProvider).tag?.artist != "")
+                      ref.read(widget.playProvider).tag?.artist != "" &&
+                      ref.read(widget.playProvider).tag?.artist != null)
                   ? ref.read(widget.playProvider).tag?.artist
                   : "Unknown artist",
               maxLines: 2,

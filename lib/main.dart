@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:player/home.dart';
-import 'package:player/permission.dart';
+import 'package:player/screens/home.dart';
+import 'package:player/screens/permission.dart';
 
 
 Future<void> main() async {
