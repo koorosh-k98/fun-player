@@ -28,7 +28,6 @@ class _PermissionHandleState extends State<PermissionHandle>
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
       var status = await Permission.storage.status;
-      print(status.toString());
       if (status.isGranted) {
         Navigator.of(context).push(MaterialPageRoute(builder: (ctx) {
           return const HomePage();
