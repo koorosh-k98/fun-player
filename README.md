@@ -26,12 +26,5 @@ I found it interesting to develop a player application which supports mp3, wav, 
 
 ## Screenshots
 
-![01.jpg](Fun%20Player/01.jpg)
-
-![02.jpg](Fun%20Player/02.jpg)
-
-![03.jpg](Fun%20Player/03.jpg)
-
-![04.jpg](Fun%20Player/04.jpg)
-
-![05.jpg](Fun%20Player/05.jpg)
+<img src="Fun%20Player/01.jpg" width="265" height="588"> <img src="Fun%20Player/02.jpg" width="265" height="588"> <img src="Fun%20Player/03.jpg" width="265" height="588">
+<img src="Fun%20Player/04.jpg" width="265" height="588"> <img src="Fun%20Player/05.jpg" width="265" height="588">
